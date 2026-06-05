@@ -1,0 +1,374 @@
+import userModel from "../models/user.model.js";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
+import config from "../config/config.js";
+import sessionModel from "../models/session.model.js";
+async function register(req, res) {
+    try {
+        const { username, email, password, expertise } = req.body;
+
+        const existingUser = await userModel.findOne({
+            $or: [
+                { username },
+                { email }]
+        });
+        if (existingUser) {
+            return res.status(400).json({ message: "Username or email already exists" });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = new userModel(
+            {
+                username,
+                email,
+                password: hashedPassword,
+                role: 'viewer',
+                expertise
+            });
+
+  await newUser.save();
+        const refreshToken = jwt.sign(
+            {
+                userId: newUser._id,
+                username: newUser.username,
+                email: newUser.email,
+                role: newUser.role
+            },
+            config.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+        const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
+
+        const session = await sessionModel.create({
+            user: newUser._id,
+            refreshToken: refreshTokenHash,
+            userAgent: req.headers['user-agent'],
+            ip: req.ip,
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        });
+        const acesstoken = jwt.sign(
+            {
+                userId: newUser._id,
+                sessionId: session._id,
+                username: newUser.username,
+                email: newUser.email,
+                role: newUser.role
+            },
+            config.JWT_SECRET,
+            { expiresIn: '15m' });
+
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "Strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        
+        res.status(201).json(
+            {
+                message: "User registered successfully", newUser:
+                {
+                    username: newUser.username,
+                    email: newUser.email,
+                    role: newUser.role,
+                    expertise: newUser.expertise,
+                    accessToken: acesstoken
+                }
+            }
+        );
+    }
+
+    catch (error) {
+        console.error("Error registering user:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+
+}
+
+async function login(req, res) {
+    try {
+        const { email, password } = req.body;
+        const user = await userModel.findOne({
+            email
+        });
+        if (!user) {
+            return res.status(400).json({ message: "Invalid email or password" });
+        }
+
+
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: "Invalid email or password" });
+        }
+        const refreshToken = jwt.sign(
+            {
+                userId: user._id,
+                username: user.username,
+                email: user.email,
+                role: user.role
+            },
+
+            config.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+        const refreshTokenHash =
+            await bcrypt.hash(refreshToken, 10);
+
+       const session = await sessionModel.create({
+            user: user._id,
+            refreshToken: refreshTokenHash,
+            ip: req.ip,
+            userAgent: req.headers["user-agent"],
+            expiresAt:
+                new Date(
+                    Date.now() +
+                    7 * 24 * 60 * 60 * 1000
+                )
+        });
+
+        const accessToken = jwt.sign(
+            {
+                userId: user._id,
+                username: user.username,
+                sessionId: session._id,
+                email: user.email,
+                role: user.role
+
+            },
+            config.JWT_SECRET,
+            { expiresIn: '15m' }
+        );
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "Strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+        res.status(200).json(
+            {
+                message: "Login successful", user: {
+                    username: user.username,
+                    email: user.email,
+                    role: user.role,
+                    expertise: user.expertise,
+                    accessToken: accessToken
+                }
+            }
+        );
+    } catch (error) {
+        console.error("Error logging in:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+}
+
+async function getMe(req, res) {
+
+    return res.status(200).json({
+        user: req.user
+    });
+}
+
+async function updateProfile(req, res) {
+    try {
+        const { username, expertise } = req.body;
+
+        const updates = {};
+
+        if (username) {
+            updates.username = username;
+        }
+
+        if (expertise) {
+            updates.expertise = expertise;
+        }
+
+        const user = await userModel.findByIdAndUpdate(
+            req.user._id,
+            updates,
+            {
+                new: true,
+                runValidators: true
+            }
+        ).select("-password");
+
+        return res.status(200).json({
+            message: "Profile updated successfully",
+            user
+        });
+
+    } catch (error) {
+        console.error("Error updating profile:", error);
+
+        return res.status(500).json({
+            message: "Internal server error"
+        });
+    }
+}
+async function refreshToken(req, res) {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+        return res.status(401).json({ message: "Unauthorized: No refresh token provided" });
+    }
+
+    try {
+        const decoded = jwt.verify(refreshToken, config.JWT_SECRET);
+        const user =
+            await userModel.findById(
+                decoded.userId
+            );
+
+        if (!user) {
+            return res.status(401).json({
+                message: "User not found"
+            });
+        }
+        const session =
+            await sessionModel.findOne({
+                user: user._id,
+                revoked: false
+            });
+        if (!session) {
+            return res.status(401).json({ message: "Session not found" });
+        }
+        const isMatch =
+            await bcrypt.compare(
+                refreshToken,
+                session.refreshToken
+            );
+
+        if (!isMatch) {
+            return res.status(401).json({
+                message:
+                    "Invalid refresh token"
+            });
+        }
+        const accessToken = jwt.sign(
+            {
+                userId: user._id,
+                username: user.username,
+                email: user.email,
+                role: user.role
+
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: '15m' }
+        );
+
+
+        const newrefreshToken = jwt.sign(
+            {
+                userId: user._id,
+                username: user.username,
+                email: user.email,
+                role: user.role
+            },
+
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+        const newRefreshTokenHash = await bcrypt.hash(newrefreshToken, 10);
+        session.refreshToken = newRefreshTokenHash;
+        await session.save();
+
+        res.cookie("refreshToken", newrefreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "Strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+        res.status(200).json({
+            message: "Token refreshed successfully",
+            accessToken
+        });
+
+    } catch (error) {
+        console.error("Error refreshing token:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+}
+
+async function logout(req, res) {
+    try {
+        const refreshToken = req.cookies.refreshToken;
+        if (!refreshToken) {
+            return res.status(400).json({ message: "No refresh token provided" });
+        }
+        const decoded =
+            jwt.verify(
+                refreshToken,
+                config.JWT_SECRET
+            );
+        const session =
+            await sessionModel.findOne({
+                user: decoded.userId,
+                revoked: false
+            });
+        if (!session) {
+            return res.status(401).json({
+                message:
+                    "Session not found"
+            });
+        }
+        const isMatch =
+            await bcrypt.compare(
+                refreshToken,
+                session.refreshToken
+            );
+        if (!isMatch) {
+            return res.status(401).json({
+                message:
+                    "Invalid refresh token"
+            });
+        }
+       
+        session.revoked = true;
+        await session.save();
+
+
+        res.clearCookie("refreshToken", {
+            httpOnly: true,
+            secure: true,
+            sameSite: "Strict"
+        });
+        res.status(200).json({ message: "Logout successful" });
+    }
+    catch (error) {
+        console.error("Error logging out:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+}
+ async function logoutAll(req, res) {
+
+    const refreshToken = req.cookies.refreshToken;
+
+    if (!refreshToken) {
+        return res.status(400).json({
+            message: "Refresh token not found"
+        })
+    }
+
+    const decoded = jwt.verify(refreshToken, config.JWT_SECRET)
+
+    await sessionModel.updateMany({
+        user: decoded.id,
+        revoked: false
+    }, {
+        revoked: true
+    })
+
+    res.clearCookie("refreshToken")
+
+    res.status(200).json({
+        message: "Logged out from all devices successfully"
+    })
+
+}
+export {
+    register,
+    login,
+    getMe,
+    updateProfile, refreshToken, logout, logoutAll
+};
+
