@@ -2,7 +2,10 @@ import userModel from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import config from "../config/config.js";
+import { generateAuthTokens }
+from "../utils/auth.utils.js";
 import sessionModel from "../models/session.model.js";
+import { googleClient } from "../config/google.config.js";
 async function register(req, res) {
     try {
         const { username, email, password, expertise } = req.body;
@@ -27,37 +30,15 @@ async function register(req, res) {
             });
 
   await newUser.save();
-        const refreshToken = jwt.sign(
-            {
-                userId: newUser._id,
-                username: newUser.username,
-                email: newUser.email,
-                role: newUser.role
-            },
-            config.JWT_SECRET,
-            { expiresIn: '7d' }
-        );
-        const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
+        const {
+    accessToken,
+    refreshToken
+} = await generateAuthTokens(
+    newUser,
+    req
+);
 
-        const session = await sessionModel.create({
-            user: newUser._id,
-            refreshToken: refreshTokenHash,
-            userAgent: req.headers['user-agent'],
-            ip: req.ip,
-            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-        });
-        const acesstoken = jwt.sign(
-            {
-                userId: newUser._id,
-                sessionId: session._id,
-                username: newUser.username,
-                email: newUser.email,
-                role: newUser.role
-            },
-            config.JWT_SECRET,
-            { expiresIn: '15m' });
-
-        res.cookie("refreshToken", refreshToken, {
+         res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
             secure: true,
             sameSite: "Strict",
@@ -73,7 +54,7 @@ async function register(req, res) {
                     email: newUser.email,
                     role: newUser.role,
                     expertise: newUser.expertise,
-                    accessToken: acesstoken
+                    accessToken: accessToken
                 }
             }
         );
@@ -102,50 +83,13 @@ async function login(req, res) {
         if (!isMatch) {
             return res.status(400).json({ message: "Invalid email or password" });
         }
-        const refreshToken = jwt.sign(
-            {
-                userId: user._id,
-                username: user.username,
-                email: user.email,
-                role: user.role
-            },
-
-            config.JWT_SECRET,
-            { expiresIn: '7d' }
-        );
-        const refreshTokenHash =
-            await bcrypt.hash(refreshToken, 10);
-
-       const session = await sessionModel.create({
-            user: user._id,
-            refreshToken: refreshTokenHash,
-            ip: req.ip,
-            userAgent: req.headers["user-agent"],
-            expiresAt:
-                new Date(
-                    Date.now() +
-                    7 * 24 * 60 * 60 * 1000
-                )
-        });
-
-        const accessToken = jwt.sign(
-            {
-                userId: user._id,
-                username: user.username,
-                sessionId: session._id,
-                email: user.email,
-                role: user.role
-
-            },
-            config.JWT_SECRET,
-            { expiresIn: '15m' }
-        );
-        res.cookie("refreshToken", refreshToken, {
-            httpOnly: true,
-            secure: true,
-            sameSite: "Strict",
-            maxAge: 7 * 24 * 60 * 60 * 1000
-        });
+      const {
+    accessToken,
+    refreshToken
+} = await generateAuthTokens(
+    newUser,
+    req
+);
         res.status(200).json(
             {
                 message: "Login successful", user: {
@@ -162,7 +106,94 @@ async function login(req, res) {
         res.status(500).json({ message: "Internal server error" });
     }
 }
+async function googleLogin(req, res) {
+    try {
+   console.log(req.body);
+        const { credential } = req.body;
 
+        const ticket =
+            await googleClient.verifyIdToken({
+                idToken: credential,
+                audience:
+                    process.env.GOOGLE_CLIENT_ID
+            });
+
+        const payload =
+            ticket.getPayload();
+
+        if (!payload.email_verified) {
+            return res.status(400).json({
+                message:
+                    "Google email not verified"
+            });
+        }
+
+        let user =
+            await userModel.findOne({
+                email: payload.email
+            });
+
+        if (!user) {
+
+            user = await userModel.create({
+                username: payload.name,
+                email: payload.email,
+                googleId: payload.sub,
+                authProvider: "google",
+                avatar: payload.picture
+            });
+
+        } else if (!user.googleId) {
+
+            user.googleId = payload.sub;
+
+            await user.save();
+        }
+
+        const {
+            accessToken,
+            refreshToken
+        } = await generateAuthTokens(
+            user,
+            req
+        );
+
+        res.cookie(
+            "refreshToken",
+            refreshToken,
+            {
+                httpOnly: true,
+                secure: true,
+                sameSite: "Strict",
+                maxAge:
+                    7 * 24 * 60 * 60 * 1000
+            }
+        );
+
+        res.status(200).json({
+            message:
+                "Google login successful",
+            user: {
+                username:
+                    user.username,
+                email:
+                    user.email,
+                role:
+                    user.role,
+                accessToken
+            }
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            message:
+                "Google login failed"
+        });
+    }
+}
 async function getMe(req, res) {
 
     return res.status(200).json({
@@ -368,6 +399,7 @@ async function logout(req, res) {
 export {
     register,
     login,
+    googleLogin,
     getMe,
     updateProfile, refreshToken, logout, logoutAll
 };

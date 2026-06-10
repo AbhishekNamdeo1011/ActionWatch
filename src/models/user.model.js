@@ -3,7 +3,22 @@ import mongoose from "mongoose";
 const userSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    password: { type: String, default: null },
+      authProvider: {
+    type: String,
+    enum: ["local", "google"],
+    default: "local"
+  },
+
+  googleId: {
+    type: String,
+    default: null
+  },
+
+  avatar: {
+    type: String,
+    default: null
+  },
    role: {
     type: String,
     enum: ['admin', 'responder', 'viewer'],
@@ -11,7 +26,7 @@ const userSchema = new mongoose.Schema({
   },
    expertise: {
     type: [String],
-  
+    default: null,
     trim: true,
     lowercase: true
   },

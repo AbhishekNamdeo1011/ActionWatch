@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { register,login,getMe,updateProfile,refreshToken,logout, logoutAll } from "../controllers/auth.controller.js";
+import { register,login,getMe,updateProfile,refreshToken,logout, logoutAll,googleLogin } from "../controllers/auth.controller.js";
 import {  validateRegistration,validateLogin,validateUpdateProfile } from "../middleware/validator.middleware.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { loginLimiter, registerLimiter } from "../middleware/rateLimiter.middleware.js";
@@ -13,5 +13,5 @@ router.put('/profile', authMiddleware, validateUpdateProfile, updateProfile);
 router.get('/refresh-token', refreshToken);
 router.get('/logout', authMiddleware, logout);
 router.get('/logout-all', authMiddleware, logoutAll);
-
+router.post('/google-login', googleLogin);
 export default router;
