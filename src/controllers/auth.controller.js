@@ -8,7 +8,7 @@ import sessionModel from "../models/session.model.js";
 import { googleClient } from "../config/google.config.js";
 async function register(req, res) {
     try {
-        const { username, email, password, expertise } = req.body;
+        const { username, email, password, expertise,role } = req.body;
 
         const existingUser = await userModel.findOne({
             $or: [
@@ -25,7 +25,7 @@ async function register(req, res) {
                 username,
                 email,
                 password: hashedPassword,
-                role: 'viewer',
+                role: role,
                 expertise
             });
 
@@ -87,7 +87,7 @@ async function login(req, res) {
     accessToken,
     refreshToken
 } = await generateAuthTokens(
-    newUser,
+    user,
     req
 );
         res.status(200).json(

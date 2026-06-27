@@ -33,11 +33,11 @@ affectedUsers: {
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'user'
   },
   assignedTo: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'user'
   }],
   
   // AI Generated Fields

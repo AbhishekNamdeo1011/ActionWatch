@@ -1,35 +1,33 @@
 import mongoose from 'mongoose';
 
-const timelineSchema  = new mongoose.Schema({   
-   incidentId: {
+const timelineSchema = new mongoose.Schema(
+  {
+    incident: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Incident',
+    ref: 'incident',
     required: true
+    },
+    author: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'user',
+      default: null,
+    },
+    type: {
+      type: String,
+      enum: ['system', 'ai', 'update', 'fix', 'comment'],
+      default: 'update',
+    },
+    message: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 500,
+    },
   },
-  message: {
-    type: String,
-    required: [true, 'Update message is required']
-  },
-  postedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  type: {
-    type: String,
-    enum: ['update', 'fix_attempt', 'escalation', 'resolution', 'system'],
-    default: 'update'
-  },
-  isPublic: {
-    // Show on public status page?
-    type: Boolean,
-    default: true
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
+  {
+    timestamps: true,
   }
-})
+);
 
 const TimelineModel = mongoose.model('timeline', timelineSchema);
 export default TimelineModel;
