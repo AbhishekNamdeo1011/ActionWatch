@@ -24,3 +24,17 @@ export const emitIncidentUpdated = (incident) => {
     );
 
 };
+
+export const emitResponderAssigned = (incident) => {
+
+    io.to(`war-room:${incident._id}`)
+        .emit("incident:responder-added", incident);
+
+};
+
+export const emitResponderRemoved = (incident) => {
+
+    io.to(`war-room:${incident._id}`)
+        .emit("incident:responder-removed", incident);
+
+};

@@ -6,16 +6,20 @@ import {
 } from "../constants/incident.constants.js";
 
 import {
-    emitIncidentUpdated, 
+    emitIncidentUpdated,
 } from "../sockets/socket.events.js";
-
+import userModel from "../models/user.model.js";
+import {
+    emitResponderAssigned
+} from "../sockets/socket.events.js";
+import { emitResponderRemoved } from "../sockets/socket.events.js";
 export const createIncidentService = async (incidentData) => {
-  const incident = await IncidentModel.create({
-    ...incidentData,
-    affectedUsers: incidentData.affectedUsers ?? 0,
-  });
+    const incident = await IncidentModel.create({
+        ...incidentData,
+        affectedUsers: incidentData.affectedUsers ?? 0,
+    });
 
-  return incident;
+    return incident;
 };
 
 export const getIncidentsService = async (queryParams) => {
@@ -160,7 +164,7 @@ export const getIncidentsService = async (queryParams) => {
 
     };
 
-}; 
+};
 
 export const getIncidentByIdService = async (incidentId) => {
 
@@ -189,7 +193,7 @@ export const getIncidentByIdService = async (incidentId) => {
             "username role"
         )
 
-       
+
 
     if (!incident) {
 
@@ -334,4 +338,142 @@ export const updateIncidentService = async (
 
     return incident;
 
+};
+
+
+export const assignResponderService = async (
+    incidentId,
+    userId
+) => {
+
+    // Validate IDs
+    if (!mongoose.Types.ObjectId.isValid(incidentId)) {
+        const error = new Error("Invalid Incident ID");
+        error.statusCode = 400;
+        throw error;
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+        const error = new Error("Invalid User ID");
+        error.statusCode = 400;
+        throw error;
+    }
+
+    // Find incident
+    const incident = await IncidentModel.findById(incidentId);
+
+    if (!incident) {
+        const error = new Error("Incident not found");
+        error.statusCode = 404;
+        throw error;
+    }
+
+    // Find user
+    const user = await userModel.findById(userId);
+
+    if (!user) {
+        const error = new Error("User not found");
+        error.statusCode = 404;
+        throw error;
+    }
+
+    // Prevent duplicate assignment
+    const alreadyAssigned = incident.assignedTo.some(
+        id => id.toString() === userId
+    );
+
+    if (alreadyAssigned) {
+        const error = new Error("User already assigned");
+        error.statusCode = 409;
+        throw error;
+    }
+
+   incident.assignedTo.push(userId);
+
+await incident.save();
+
+await incident.populate([
+    {
+        path: "createdBy",
+        select: "username role"
+    },
+    {
+        path: "assignedTo",
+        select: "username role expertise"
+    }
+]);
+
+emitResponderAssigned(incident);
+
+return incident;
+};
+
+export const removeResponderService = async (
+    incidentId,
+    userId
+) => {
+console.log("Incident ID:", incidentId);
+console.log("User ID:", userId);
+    if (!mongoose.Types.ObjectId.isValid(incidentId)) {
+        const error = new Error("Invalid Incident ID");
+        error.statusCode = 400;
+        throw error;
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+        const error = new Error("Invalid User ID");
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const incident = await IncidentModel.findById(incidentId);
+
+    if (!incident) {
+        const error = new Error("Incident not found");
+        error.statusCode = 404;
+        throw error;
+    }
+
+    const exists = incident.assignedTo.some(
+        id => id.toString() === userId
+    );
+
+    if (!exists) {
+        const error = new Error("Responder is not assigned");
+        error.statusCode = 400;
+        throw error;
+    }
+    console.log(
+    "Before:",
+    incident.assignedTo.map(id => id.toString())
+);
+
+    incident.assignedTo = incident.assignedTo.filter(
+        id => id.toString() !== userId
+    );
+console.log(
+    "After:",
+    incident.assignedTo.map(id => id.toString())
+);
+    await incident.save();
+const updated = await IncidentModel.findById(incidentId);
+
+console.log(
+    "Database:",
+    updated.assignedTo.map(id => id.toString())
+);
+    await incident.populate([
+        {
+            path: "createdBy",
+            select: "username role"
+        },
+        {
+            path: "assignedTo",
+            select: "username role expertise"
+        }
+    ]);
+
+    emitResponderRemoved(incident);
+
+    return incident;
 };

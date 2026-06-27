@@ -2,7 +2,10 @@ import { createIncidentService } from '../services/incident.service.js';
 import { getIncidentsService } from "../services/incident.service.js";
 import { getIncidentByIdService} from "../services/incident.service.js";
 import { updateIncidentService,} from "../services/incident.service.js";
-
+import {assignResponderService} from "../services/incident.service.js";
+import {
+    removeResponderService
+} from "../services/incident.service.js";
 export const createIncident = async (req, res) => {
   try {
     const {
@@ -215,4 +218,93 @@ export const updateIncident = async (
 
     }
 
+};
+
+export const assignResponder = async (
+    req,
+    res
+) => {
+
+    try {
+
+        const incident =
+            await assignResponderService(
+
+                req.params.incidentId,
+
+                req.body.userId
+
+            );
+
+        return res.status(200).json({
+
+            success: true,
+
+            message: "Responder assigned successfully.",
+
+            data: incident
+
+        });
+
+    }
+
+    catch (error) {
+
+        if (error.statusCode) {
+
+            return res.status(error.statusCode).json({
+
+                success: false,
+
+                message: error.message
+
+            });
+
+        }
+
+        console.error(error);
+
+        return res.status(500).json({
+
+            success: false,
+
+            message: "Internal Server Error"
+
+        });
+
+    }
+
+};
+
+export const removeResponder = async (req, res) => {
+
+    try {
+
+        const incident = await removeResponderService(
+            req.params.incidentId,
+            req.params.userId
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Responder removed successfully.",
+            data: incident
+        });
+
+    } catch (error) {
+
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({
+                success: false,
+                message: error.message
+            });
+        }
+
+        console.error(error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        });
+    }
 };
