@@ -1,39 +1,58 @@
-import incidentModel from '../models/incident.model.js';
-import timelineModel from '../models/timeline.model.js';
-import { emitTimelineCreated } from '../sockets/socket.events.js';
+import IncidentModel from "../models/incident.model.js";
+import TimelineModel from "../models/timeline.model.js";
+
+import {
+    emitTimelineCreated,
+} from "../sockets/socket.events.js";
+
+/*
+==========================================
+Create Timeline Entry
+==========================================
+*/
+
 export const createTimelineEntry = async ({
     incidentId,
-    author,
+    author = null,
+    eventType,
     message,
-    type
+    metadata = {},
 }) => {
 
-    const incident = await incidentModel.findById(incidentId);
+    const incident = await IncidentModel.findById(
+        incidentId
+    );
 
     if (!incident) {
 
-        const error = new Error("Incident not found");
+        const error = new Error(
+            "Incident not found."
+        );
+
         error.statusCode = 404;
 
         throw error;
+
     }
 
-    const timeline = await timelineModel.create({
+    const timeline = await TimelineModel.create({
 
         incident: incidentId,
 
         author,
 
+        eventType,
+
         message,
 
-        type
+        metadata,
 
     });
 
-    await timeline.populate(
-        "author",
-        "username role"
-    );
+    await timeline.populate({
+        path: "author",
+        select: "username role",
+    });
 
     emitTimelineCreated(
         incidentId,
@@ -41,42 +60,54 @@ export const createTimelineEntry = async ({
     );
 
     return timeline;
+
 };
 
-export const getTimelineByIncident = async (incidentId) => {
-  const incident = await incidentModel.findById(incidentId).select('_id');
+/*
+==========================================
+Get Timeline By Incident
+==========================================
+*/
 
-  if (!incident) {
-    const error = new Error('Incident not found.');
-    error.statusCode = 404;
-    throw error;
-  }
+export const getTimelineByIncident = async (
+    incidentId
+) => {
 
-  const timelineEntries = await timelineModel
-    .find({ incident: incidentId })
-    .sort({ createdAt: 1 })
-    .populate({
-      path: 'author',
-      select: 'name email -password',
-    });
+    const incident =
+        await IncidentModel.findById(
+            incidentId
+        ).select("_id");
 
-  return timelineEntries;
+    if (!incident) {
+
+        const error = new Error(
+            "Incident not found."
+        );
+
+        error.statusCode = 404;
+
+        throw error;
+
+    }
+
+    return TimelineModel.find({
+
+        incident: incidentId,
+
+    })
+
+        .populate({
+
+            path: "author",
+
+            select: "username role",
+
+        })
+
+        .sort({
+
+            createdAt: 1,
+
+        });
+
 };
-
-// export const createTimelineService = async(data)=>{
-
-//     const timeline = await timelineModel.create(data);
-
-//     await timeline.populate(
-//         "author",
-//         "username role"
-//     );
-
-//     emitTimelineCreated(
-//         timeline.incident.toString(),
-//         timeline
-//     );
-
-//     return timeline;
-
-// };

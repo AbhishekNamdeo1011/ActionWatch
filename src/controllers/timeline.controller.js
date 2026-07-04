@@ -1,85 +1,152 @@
-import { createTimelineEntry, getTimelineByIncident } from '../services/timeline.service.js';
+import {
+    createTimelineEntry,
+    getTimelineByIncident,
+} from "../services/timeline.service.js";
 
-export const createTimeline = async (req, res) => {
-  try {
-    const { incidentId } = req.params;
-    const { message, type } = req.body;
+/*
+==========================================
+Create Timeline Entry
+==========================================
+*/
 
-    if (typeof message !== 'string' || !message.trim()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Message is required.',
-      });
+export const createTimeline = async (
+    req,
+    res
+) => {
+
+    try {
+
+        const { incidentId } = req.params;
+
+        const {
+            message,
+            eventType,
+            metadata = {},
+        } = req.body;
+
+        if (!message?.trim()) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message: "Message is required.",
+
+            });
+
+        }
+
+        const timeline =
+            await createTimelineEntry({
+
+                incidentId,
+
+                author: req.user._id,
+
+                eventType,
+
+                message: message.trim(),
+
+                metadata,
+
+            });
+
+        return res.status(201).json({
+
+            success: true,
+
+            message: "Timeline entry created successfully.",
+
+            data: timeline,
+
+        });
+
     }
 
-    const normalizedMessage = message.trim();
+    catch (error) {
 
-    if (normalizedMessage.length > 500) {
-      return res.status(400).json({
-        success: false,
-        message: 'Message must not exceed 500 characters.',
-      });
+        if (error.statusCode) {
+
+            return res.status(error.statusCode).json({
+
+                success: false,
+
+                message: error.message,
+
+            });
+
+        }
+
+        console.error(error);
+
+        return res.status(500).json({
+
+            success: false,
+
+            message: "Internal Server Error",
+
+        });
+
     }
 
-    const timelineEntry = await createTimelineEntry({
-      incidentId,
-      author: req.user._id,
-      message: normalizedMessage,
-      type,
-    });
-    return res.status(201).json({
-      success: true,
-      message: 'Timeline entry created successfully.',
-      data: timelineEntry,
-    });
-  } catch (error) {
-    if (error?.statusCode === 404) {
-      return res.status(404).json({
-        success: false,
-        message: error.message,
-      });
-    }
-
-    if (error?.name === 'ValidationError') {
-      return res.status(400).json({
-        success: false,
-        message: error.message,
-      });
-    }
-
-    console.error('Create Timeline Error:', error);
-
-    return res.status(500).json({
-      success: false,
-      message: 'Internal Server Error',
-    });
-  }
 };
 
-export const getIncidentTimeline = async (req, res) => {
-  try {
-    const { incidentId } = req.params;
+/*
+==========================================
+Get Incident Timeline
+==========================================
+*/
 
-    const timelineEntries = await getTimelineByIncident(incidentId);
+export const getIncidentTimeline = async (
+    req,
+    res
+) => {
 
-    return res.status(200).json({
-      success: true,
-      message: 'Timeline fetched successfully.',
-      data: timelineEntries,
-    });
-  } catch (error) {
-    if (error?.statusCode === 404) {
-      return res.status(404).json({
-        success: false,
-        message: error.message,
-      });
+    try {
+
+        const timeline =
+            await getTimelineByIncident(
+
+                req.params.incidentId
+
+            );
+
+        return res.status(200).json({
+
+            success: true,
+
+            message: "Timeline fetched successfully.",
+
+            data: timeline,
+
+        });
+
     }
 
-    console.error('Get Timeline Error:', error);
+    catch (error) {
 
-    return res.status(500).json({
-      success: false,
-      message: 'Internal Server Error',
-    });
-  }
+        if (error.statusCode) {
+
+            return res.status(error.statusCode).json({
+
+                success: false,
+
+                message: error.message,
+
+            });
+
+        }
+
+        console.error(error);
+
+        return res.status(500).json({
+
+            success: false,
+
+            message: "Internal Server Error",
+
+        });
+
+    }
+
 };

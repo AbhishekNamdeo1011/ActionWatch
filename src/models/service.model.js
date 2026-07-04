@@ -1,45 +1,115 @@
-import mongoose from 'mongoose';
-const serviceSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true
-  },
-  url: {
-    // Health check endpoint to ping
-    type: String,
-    required: true
-  },
-  category: {
-    type: String,
-    enum: ['api', 'database', 'frontend', 'cdn', 'payment', 'auth', 'other']
-  },
-  checkInterval: {
-    type: Number,
-    default: 30  // seconds
-  },
-  status: {
-    type: String,
-    enum: ['operational', 'degraded', 'outage', 'unknown'],
-    default: 'unknown'
-  },
-  lastChecked: Date,
-  lastStatusChange: Date,
-  responseTime: Number,  // in ms
-  uptimePercentage: {
-    type: Number,
-    default: 100
-  },
-  owner: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
-  isActive: {
-    type: Boolean,
-    default: true
-  }
-}, {
-  timestamps: true
-})
+import mongoose from "mongoose";
 
-const ServiceModel = mongoose.model('service', serviceSchema);
-export default ServiceModel;
+const serviceSchema = new mongoose.Schema(
+    {
+        name: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+
+        description: {
+            type: String,
+            trim: true,
+            default: "",
+        },
+
+        url: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+
+        method: {
+            type: String,
+            enum: ["GET", "POST", "HEAD"],
+            default: "GET",
+        },
+
+        expectedStatus: {
+            type: Number,
+            default: 200,
+        },
+
+        interval: {
+            type: Number,
+            default: 30,
+        },
+
+        timeout: {
+            type: Number,
+            default: 5000,
+        },
+
+        failureThreshold: {
+            type: Number,
+            default: 3,
+        },
+
+        consecutiveFailures: {
+            type: Number,
+            default: 0,
+        },
+
+        currentStatus: {
+            type: String,
+            enum: ["UP", "DOWN", "UNKNOWN"],
+            default: "UNKNOWN",
+        },
+        activeIncident: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "incident",
+    default: null
+},
+
+        lastCheckedAt: {
+            type: Date,
+            default: null,
+        },
+
+        lastResponseTime: {
+            type: Number,
+            default: null,
+        },
+        lastHttpStatus: {
+    type: Number,
+    default: null,
+},
+
+lastError: {
+    type: String,
+    default: "",
+},
+
+        isActive: {
+            type: Boolean,
+            default: true,
+        },
+
+        createdBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "user",
+            required: true,
+        },
+    },
+    {
+        timestamps: true,
+    }
+);
+
+/*
+Prevent duplicate service URLs
+for the same user.
+*/
+
+serviceSchema.index(
+    {
+        createdBy: 1,
+        url: 1,
+    },
+    {
+        unique: true,
+    }
+);
+
+export default mongoose.model("service", serviceSchema);

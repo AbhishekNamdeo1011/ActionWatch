@@ -13,6 +13,9 @@ import {
     emitResponderAssigned
 } from "../sockets/socket.events.js";
 import { emitResponderRemoved } from "../sockets/socket.events.js";
+import { createTimelineEntry } from "./timeline.service.js";
+
+
 export const createIncidentService = async (incidentData) => {
     const incident = await IncidentModel.create({
         ...incidentData,
@@ -210,7 +213,8 @@ export const getIncidentByIdService = async (incidentId) => {
 
 export const updateIncidentService = async (
     incidentId,
-    updateData
+    updateData,
+    updatedBy
 ) => {
 
     // -------------------------
@@ -221,7 +225,6 @@ export const updateIncidentService = async (
 
         const error = new Error("Invalid Incident ID");
         error.statusCode = 400;
-
         throw error;
 
     }
@@ -233,19 +236,12 @@ export const updateIncidentService = async (
     const allowedUpdates = [
 
         "title",
-
         "description",
-
         "severity",
-
         "status",
-
         "service",
-
         "affectedUsers",
-
         "errorCode",
-
         "errorLogs",
 
     ];
@@ -273,7 +269,6 @@ export const updateIncidentService = async (
 
         const error = new Error("Invalid status.");
         error.statusCode = 400;
-
         throw error;
 
     }
@@ -289,44 +284,178 @@ export const updateIncidentService = async (
 
         const error = new Error("Invalid severity.");
         error.statusCode = 400;
-
         throw error;
 
     }
 
     // -------------------------
-    // Update
+    // Existing Incident
     // -------------------------
 
-    const incident = await IncidentModel
-
-        .findByIdAndUpdate(
-
-            incidentId,
-
-            updatePayload,
-
-            {
-
-                new: true,
-
-                runValidators: true,
-
-            }
-
-        )
-
-        .populate(
-            "createdBy",
-            "username role"
+    const existingIncident =
+        await IncidentModel.findById(
+            incidentId
         );
 
-    if (!incident) {
+    if (!existingIncident) {
 
         const error = new Error("Incident not found");
         error.statusCode = 404;
-
         throw error;
+
+    }
+
+    // -------------------------
+    // Update Incident
+    // -------------------------
+
+    const incident =
+        await IncidentModel
+            .findByIdAndUpdate(
+
+                incidentId,
+
+                updatePayload,
+
+                {
+
+                    new: true,
+
+                    runValidators: true,
+
+                }
+
+            )
+            .populate(
+                "createdBy",
+                "username role"
+            )
+            .populate(
+                "assignedTo",
+                "username role expertise"
+            );
+
+    // -------------------------
+    // Timeline - Status Changed
+    // -------------------------
+
+    if (
+        updatePayload.status &&
+        existingIncident.status !== incident.status
+    ) {
+
+        await createTimelineEntry({
+
+            incidentId: incident._id,
+
+            author: updatedBy,
+
+            eventType: "STATUS_CHANGED",
+
+            message: `Status changed from "${existingIncident.status}" to "${incident.status}".`,
+
+            metadata: {
+
+                oldStatus: existingIncident.status,
+
+                newStatus: incident.status,
+
+            }
+
+        });
+
+    }
+
+    // -------------------------
+    // Timeline - Severity Changed
+    // -------------------------
+
+    if (
+        updatePayload.severity &&
+        existingIncident.severity !== incident.severity
+    ) {
+
+        await createTimelineEntry({
+
+            incidentId: incident._id,
+
+            author: updatedBy,
+
+            eventType: "SEVERITY_CHANGED",
+
+            message: `Severity changed from "${existingIncident.severity}" to "${incident.severity}".`,
+
+            metadata: {
+
+                oldSeverity: existingIncident.severity,
+
+                newSeverity: incident.severity,
+
+            }
+
+        });
+
+    }
+
+    // -------------------------
+    // Timeline - Title Changed
+    // -------------------------
+
+    if (
+        updatePayload.title &&
+        existingIncident.title !== incident.title
+    ) {
+
+        await createTimelineEntry({
+
+            incidentId: incident._id,
+
+            author: updatedBy,
+
+            eventType: "INCIDENT_UPDATED",
+
+            message: "Incident title updated.",
+
+            metadata: {
+
+                oldTitle: existingIncident.title,
+
+                newTitle: incident.title,
+
+            }
+
+        });
+
+    }
+
+    // -------------------------
+    // Timeline - Description Changed
+    // -------------------------
+
+    if (
+        updatePayload.description &&
+        existingIncident.description !== incident.description
+    ) {
+
+        await createTimelineEntry({
+
+            incidentId: incident._id,
+
+            author: updatedBy,
+
+            eventType: "INCIDENT_UPDATED",
+
+            message: "Incident description updated.",
+
+            metadata: {
+
+                oldDescription: existingIncident.description,
+
+                newDescription: incident.description,
+
+            }
+
+        });
 
     }
 
@@ -388,32 +517,53 @@ export const assignResponderService = async (
         throw error;
     }
 
-   incident.assignedTo.push(userId);
+    incident.assignedTo.push(userId);
 
-await incident.save();
+    await incident.save();
 
-await incident.populate([
-    {
-        path: "createdBy",
-        select: "username role"
-    },
-    {
-        path: "assignedTo",
-        select: "username role expertise"
-    }
-]);
+    await incident.populate([
+        {
+            path: "createdBy",
+            select: "username role"
+        },
+        {
+            path: "assignedTo",
+            select: "username role expertise"
+        }
+    ]);
 
-emitResponderAssigned(incident);
+    emitResponderAssigned(incident);
+    await createTimelineEntry({
 
-return incident;
+        incidentId: incident._id,
+
+        author: user._id,
+
+        eventType: "RESPONDER_ASSIGNED",
+
+        message: `${user.username} assigned as responder.`,
+
+        metadata: {
+
+            userId: user._id,
+
+            username: user.username,
+
+            role: user.role,
+
+        }
+
+    });
+
+    return incident;
 };
 
 export const removeResponderService = async (
     incidentId,
     userId
 ) => {
-console.log("Incident ID:", incidentId);
-console.log("User ID:", userId);
+    console.log("Incident ID:", incidentId);
+    console.log("User ID:", userId);
     if (!mongoose.Types.ObjectId.isValid(incidentId)) {
         const error = new Error("Invalid Incident ID");
         error.statusCode = 400;
@@ -444,24 +594,24 @@ console.log("User ID:", userId);
         throw error;
     }
     console.log(
-    "Before:",
-    incident.assignedTo.map(id => id.toString())
-);
+        "Before:",
+        incident.assignedTo.map(id => id.toString())
+    );
 
     incident.assignedTo = incident.assignedTo.filter(
         id => id.toString() !== userId
     );
-console.log(
-    "After:",
-    incident.assignedTo.map(id => id.toString())
-);
+    console.log(
+        "After:",
+        incident.assignedTo.map(id => id.toString())
+    );
     await incident.save();
-const updated = await IncidentModel.findById(incidentId);
+    const updated = await IncidentModel.findById(incidentId);
 
-console.log(
-    "Database:",
-    updated.assignedTo.map(id => id.toString())
-);
+    console.log(
+        "Database:",
+        updated.assignedTo.map(id => id.toString())
+    );
     await incident.populate([
         {
             path: "createdBy",
@@ -474,6 +624,129 @@ console.log(
     ]);
 
     emitResponderRemoved(incident);
+await createTimelineEntry({
+
+    incidentId: incident._id,
+
+    author: userId,
+
+    eventType: "RESPONDER_REMOVED",
+
+    message: "Responder removed from incident.",
+
+    metadata: {
+
+        userId,
+
+    }
+
+});
+    return incident;
+};
+
+
+/*
+==========================================
+Create Automatic Incident
+==========================================
+*/
+
+export const createAutomaticIncident = async (
+    service
+) => {
+
+    const incident = await IncidentModel.create({
+
+        title: `${service.name} is DOWN`,
+
+        description: `${service.name} failed health checks.`,
+
+        severity: "P1",
+
+        status: "open",
+
+        service: "api",
+
+        detectedBy: "monitor",
+
+        affectedUsers: 0,
+
+        errorLogs: "Automatic health check failed.",
+
+        detectedAt: new Date(),
+
+    });
+
+    await createTimelineEntry({
+
+        incidentId: incident._id,
+
+        eventType: "INCIDENT_CREATED",
+
+        message: `${service.name} failed health checks. Incident created automatically.`,
+
+        metadata: {
+
+            serviceId: service._id,
+
+            serviceName: service.name,
+
+            detectedBy: "monitor",
+
+        }
+
+    });
 
     return incident;
+
+};
+
+/*
+==========================================
+Resolve Automatic Incident
+==========================================
+*/
+
+export const resolveAutomaticIncident = async (
+    incidentId
+) => {
+
+    const incident = await IncidentModel.findById(
+        incidentId
+    );
+
+    if (!incident) {
+        return null;
+    }
+
+    const resolvedAt = new Date();
+
+    const mttr = Math.floor(
+        (resolvedAt - incident.detectedAt) / 1000
+    );
+
+    incident.status = "resolved";
+    incident.resolvedAt = resolvedAt;
+    incident.mttr = mttr;
+
+    await incident.save();
+    await createTimelineEntry({
+
+        incidentId: incident._id,
+
+        eventType: "INCIDENT_RESOLVED",
+
+        message: "Incident resolved automatically after service recovered.",
+
+        metadata: {
+
+            resolvedBy: "monitor",
+
+            mttr: incident.mttr,
+
+        }
+
+    });
+    return incident;
+
 };

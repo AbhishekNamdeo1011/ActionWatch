@@ -1,33 +1,64 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const timelineSchema = new mongoose.Schema(
-  {
-    incident: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'incident',
-    required: true
+    {
+        incident: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "incident",
+            required: true,
+            index: true,
+        },
+
+        author: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "user",
+            default: null,
+        },
+
+        eventType: {
+            type: String,
+            enum: [
+                "INCIDENT_CREATED",
+                "STATUS_CHANGED",
+                "SEVERITY_CHANGED",
+                "RESPONDER_ASSIGNED",
+                "RESPONDER_REMOVED",
+                "SERVICE_DOWN",
+                "SERVICE_RECOVERED",
+                "INCIDENT_RESOLVED",
+                "COMMENT_ADDED",
+                "AI_ROOT_CAUSE",
+                "AI_SIMILAR_INCIDENTS",
+                "AI_POSTMORTEM",
+            ],
+            required: true,
+        },
+
+        message: {
+            type: String,
+            required: true,
+            trim: true,
+            maxlength: 500,
+        },
+
+        metadata: {
+            type: mongoose.Schema.Types.Mixed,
+            default: {},
+        },
     },
-    author: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'user',
-      default: null,
-    },
-    type: {
-      type: String,
-      enum: ['system', 'ai', 'update', 'fix', 'comment'],
-      default: 'update',
-    },
-    message: {
-      type: String,
-      required: true,
-      trim: true,
-      maxlength: 500,
-    },
-  },
-  {
-    timestamps: true,
-  }
+    {
+        timestamps: true,
+    }
 );
 
-const TimelineModel = mongoose.model('timeline', timelineSchema);
+timelineSchema.index({
+    incident: 1,
+    createdAt: 1,
+});
+
+const TimelineModel = mongoose.model(
+    "timeline",
+    timelineSchema
+);
+
 export default TimelineModel;

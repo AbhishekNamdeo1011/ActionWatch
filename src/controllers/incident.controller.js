@@ -176,8 +176,9 @@ export const updateIncident = async (
 
                 req.params.incidentId,
 
-                req.body
+        req.body,
 
+        req.user._id
             );
 
         return res.status(200).json({

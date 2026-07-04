@@ -38,3 +38,36 @@ export const emitResponderRemoved = (incident) => {
         .emit("incident:responder-removed", incident);
 
 };
+export const emitPresenceOnline = (io, roomName, user) => {
+
+    io.to(roomName).emit("presence:online", {
+        userId: user._id,
+        username: user.username,
+        role: user.role
+    });
+
+};
+
+export const emitPresenceOffline = (io, roomName, user) => {
+  console.log("\n========== OFFLINE EVENT ==========");
+    console.log("Room:", roomName);
+    console.log("User:", user.username);
+    io.to(roomName).emit("presence:offline", {
+        userId: user._id,
+        username: user.username
+    });
+
+};
+
+export const emitPresenceList = (
+    io,
+    socketId,
+    users
+) => {
+
+    io.to(socketId).emit(
+        "presence:list",
+        users
+    );
+
+};

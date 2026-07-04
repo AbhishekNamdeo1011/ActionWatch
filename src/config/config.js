@@ -10,7 +10,8 @@ if (!process.env.JWT_SECRET) {
 const config = {
 
   MONGO_URI: process.env.MONGO_URI,
-  JWT_SECRET: process.env.JWT_SECRET
+  JWT_SECRET: process.env.JWT_SECRET,
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY,
 }
 
 export default config;  
