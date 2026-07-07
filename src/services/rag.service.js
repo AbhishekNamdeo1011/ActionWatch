@@ -1,5 +1,6 @@
 import { pineconeIndex } from "../config/pinecone.js";
 import { generateEmbedding } from "./embedding.service.js";
+import mongoose from "mongoose";
 
 /*
 ==========================================
@@ -138,3 +139,213 @@ export const searchSimilarVectors = async (
     return result.matches ?? [];
 
 };
+/*
+==========================================
+Find Similar Incidents
+==========================================
+*/
+
+export const findSimilarIncidents = async (
+
+    incident,
+
+    topK = 5
+
+) => {
+
+    /*
+    ==========================================
+    Build Document
+    ==========================================
+    */
+
+    const text =
+        buildIncidentDocument(
+            incident
+        );
+
+    /*
+    ==========================================
+    Generate Embedding
+    ==========================================
+    */
+
+    const embedding =
+        await generateEmbedding(
+            text
+        );
+
+    /*
+    ==========================================
+    Search Pinecone
+    ==========================================
+    */
+
+    const result =
+        await pineconeIndex.query({
+
+            vector: embedding,
+
+            topK,
+
+            includeMetadata: true,
+
+        });
+
+    return result.matches;
+
+};
+
+/*
+==========================================
+Fetch Similar Incidents
+==========================================
+*/
+
+import IncidentModel from "../models/incident.model.js";
+
+export const getSimilarIncidents = async (
+
+    incident,
+
+    topK = 5
+
+) => {
+
+    const matches =
+        await findSimilarIncidents(
+
+            incident,
+
+            topK + 1
+
+        );
+
+    /*
+    ============================
+    Remove Current Incident
+    ============================
+    */
+const filtered = matches
+    .filter(match => {
+
+        return (
+
+            match.id !== incident._id.toString() &&
+
+            match.score >= 0.80
+
+        );
+
+    })
+    .slice(0, 3);
+
+    /*
+    ============================
+    No Results
+    ============================
+    */
+
+    if (!filtered.length) {
+
+        return [];
+
+    }
+
+    /*
+    ============================
+    Mongo IDs
+    ============================
+    */
+
+    const ids = filtered
+    .map(match => match.id)
+    .filter(id => mongoose.Types.ObjectId.isValid(id));
+
+    /*
+    ============================
+    Fetch Incidents
+    ============================
+    */
+
+    const incidents =
+
+        await IncidentModel.find({
+
+            _id: {
+
+                $in: ids,
+
+            },
+
+        });
+        const scoreMap = new Map(
+
+    filtered.map(
+
+        match => [
+
+            match.id,
+
+            match.score,
+
+        ]
+
+    )
+
+);
+
+incidents.sort((a, b) =>
+
+    scoreMap.get(b._id.toString()) -
+
+    scoreMap.get(a._id.toString())
+
+);
+
+    /*
+    ============================
+    Attach Similarity Score
+    ============================
+    */
+
+  return incidents.map((incident) => {
+
+    const similarity =
+        scoreMap.get(
+            incident._id.toString()
+        );
+
+    return {
+
+        id: incident._id,
+
+        title: incident.title,
+
+        description: incident.description,
+
+        severity: incident.severity,
+
+        status: incident.status,
+
+        service: incident.service,
+
+        affectedUsers: incident.affectedUsers,
+
+        detectedAt: incident.detectedAt,
+
+        resolvedAt: incident.resolvedAt,
+
+        mttr: incident.mttr,
+
+        summary: incident.aiSummary,
+
+        similarity: Number(
+            (similarity * 100).toFixed(1)
+        ),
+
+    };
+
+});
+
+}; 

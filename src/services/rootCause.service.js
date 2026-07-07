@@ -12,7 +12,11 @@ import {
     createTimelineEntry,
 } from "../services/timeline.service.js";
 import {
+
     storeVector,
+
+    getSimilarIncidents,
+
 } from "./rag.service.js";
 
 import { buildRootCausePrompt } from "../prompts/rootCause.prompt.js";
@@ -91,54 +95,91 @@ export const generateRootCause = async (
                 incident._id,
 
         });
-const healthHistory = service
+    const healthHistory = service
 
-? await getRecentHealthChecks(
+        ? await getRecentHealthChecks(
 
-    service._id,
+            service._id,
 
-    10
+            10
 
-)
+        )
 
-: [];
+        : [];
     const monitoring = service
 
-? {
+        ? {
 
-    name:
-        service.name,
+            name:
+                service.name,
 
-    currentStatus:
-        service.currentStatus,
+            currentStatus:
+                service.currentStatus,
 
-    expectedStatus:
-        service.expectedStatus,
+            expectedStatus:
+                service.expectedStatus,
 
-    responseTime:
-        service.lastResponseTime,
+            responseTime:
+                service.lastResponseTime,
 
-    httpStatus:
-        service.lastHttpStatus,
+            httpStatus:
+                service.lastHttpStatus,
 
-    lastError:
-        service.lastError,
+            lastError:
+                service.lastError,
 
-    failureThreshold:
-        service.failureThreshold,
+            failureThreshold:
+                service.failureThreshold,
 
-    consecutiveFailures:
-        service.consecutiveFailures,
+            consecutiveFailures:
+                service.consecutiveFailures,
 
-    interval:
-        service.interval,
+            interval:
+                service.interval,
 
-    lastCheckedAt:
-        service.lastCheckedAt,
+            lastCheckedAt:
+                service.lastCheckedAt,
 
-}
+        }
 
-: {};
+        : {};
+
+    /*
+==========================================
+Find Similar Incidents
+==========================================
+*/
+
+   const similarIncidents =
+    await getSimilarIncidents(
+
+        incident,
+
+        5
+
+    );
+
+console.log(
+    "\n========== Mongo Similar Incidents =========="
+);
+
+console.dir(
+
+    similarIncidents,
+
+    {
+
+        depth: null,
+
+    }
+
+);
+
+    console.log(
+        "\n========== Similar Incidents =========="
+    );
+
+    console.log(similarIncidents);
 
     /*
     ==========================================
@@ -154,10 +195,23 @@ const healthHistory = service
             timeline,
 
             monitoring,
-            healthHistory
+            healthHistory,
+            similarIncidents
 
         );
+console.log("\n========== RAG ==========\n");
 
+console.dir(
+
+    similarIncidents,
+
+    {
+
+        depth:null,
+
+    }
+
+);
     /*
     ==========================================
     Gemini
@@ -204,41 +258,41 @@ const healthHistory = service
     ==========================================
     */
 
-    
-incident.aiSummary =
-    aiResult.summary;
 
-incident.aiRootCauses =
-    aiResult.possibleCauses;
+    incident.aiSummary =
+        aiResult.summary;
 
-incident.aiRecommendations =
-    aiResult.recommendedActions;
+    incident.aiRootCauses =
+        aiResult.possibleCauses;
 
-incident.aiRawResponse =
-    response.text;
+    incident.aiRecommendations =
+        aiResult.recommendedActions;
 
-incident.aiGeneratedAt =
-    new Date();
+    incident.aiRawResponse =
+        response.text;
 
-await incident.save();
-console.log("Step 1");
-/*
-==========================================
-Store Embedding
-==========================================
-*/
+    incident.aiGeneratedAt =
+        new Date();
 
-console.log(
-    "Uploading incident to Pinecone..."
-);
+    await incident.save();
+    console.log("Step 1");
+    /*
+    ==========================================
+    Store Embedding
+    ==========================================
+    */
 
-await storeVector(
-    incident
-);
-console.log("Step 2");
-console.log(
-    "Incident uploaded successfully."
-);
+    console.log(
+        "Uploading incident to Pinecone..."
+    );
+
+    await storeVector(
+        incident
+    );
+    console.log("Step 2");
+    console.log(
+        "Incident uploaded successfully."
+    );
 
     /*
     ==========================================

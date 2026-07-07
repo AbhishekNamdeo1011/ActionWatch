@@ -16,7 +16,7 @@ import {
 } from "../sockets/socket.events.js";
 import { emitResponderRemoved } from "../sockets/socket.events.js";
 import { createTimelineEntry } from "./timeline.service.js";
-
+import { generatePostmortem } from "./postmortem.service.js";
 
 export const createIncidentService = async (incidentData) => {
     const incident = await IncidentModel.create({
@@ -112,23 +112,30 @@ export const getIncidentsService = async (queryParams) => {
 
     if (search) {
 
-        filter.$or = [
+       filter.$or = [
 
-            {
-                title: {
-                    $regex: search,
-                    $options: "i",
-                },
-            },
+    {
+        title: {
+            $regex: search,
+            $options: "i",
+        },
+    },
 
-            {
-                description: {
-                    $regex: search,
-                    $options: "i",
-                },
-            },
+    {
+        description: {
+            $regex: search,
+            $options: "i",
+        },
+    },
 
-        ];
+    {
+        errorLogs: {
+            $regex: search,
+            $options: "i",
+        },
+    },
+
+];
 
     }
 
@@ -139,12 +146,18 @@ export const getIncidentsService = async (queryParams) => {
     const incidents = await IncidentModel
 
         .find(filter)
+        .select(
+    "title severity status service affectedUsers detectedAt createdAt assignedTo"
+)
 
         .populate(
             "createdBy",
             "username role"
         )
-
+.populate(
+    "assignedTo",
+    "username role"
+)
         .sort(sort)
 
         .skip(skip)
@@ -734,7 +747,9 @@ export const resolveAutomaticIncident = async (
     await incident.save();
 
     console.log("Uploading incident embedding...");
-
+await generatePostmortem(
+    incident._id
+);
     await storeVector(incident);
 
     console.log("Incident embedding uploaded.");

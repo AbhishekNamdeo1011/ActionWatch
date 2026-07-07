@@ -2,37 +2,91 @@ export const buildRootCausePrompt = (
     incident,
     timeline,
     monitoring = {},
-    healthHistory
+    healthHistory = [],
+    similarIncidents = []
 ) => {
 
+    /*
+    ==========================================
+    Similar Historical Incidents
+    ==========================================
+    */
+
+    const similarIncidentContext =
+        similarIncidents.length > 0
+
+            ? similarIncidents.map((incident, index) => `
+
+Previous Incident ${index + 1}
+
+Similarity:
+${(incident.similarity * 100).toFixed(1)}%
+
+Title:
+${incident.title}
+
+Description:
+${incident.description}
+
+Severity:
+${incident.severity}
+
+Service:
+${incident.service}
+
+Status:
+${incident.status}
+
+AI Root Cause Summary:
+${incident.aiSummary || "Unknown"}
+
+Possible Causes:
+${incident.aiRootCauses?.map(c => `- ${c.cause}`).join("\n") || "None"}
+
+Recommended Actions:
+${incident.aiRecommendations?.map(r => `- ${r}`).join("\n") || "None"}
+
+--------------------------------------------------
+
+`).join("\n")
+
+            : "No similar historical incidents found.";
+
     return `
-You are a Senior Site Reliability Engineer (SRE) with extensive experience in diagnosing production incidents.
 
-Your job is to analyze this production incident and determine the most probable root causes.
+You are a Senior Site Reliability Engineer (SRE).
 
-==========================
+Your task is to analyze the current production incident.
+
+IMPORTANT:
+
+- First analyze the current incident.
+- Then compare it with any historical incidents.
+- If historical incidents are relevant, explain why.
+- Do NOT blindly copy previous root causes.
+- Use previous incidents only as supporting evidence.
+- If no similar incidents exist, rely entirely on the current incident data.
+- Never invent facts.
+- If logs are missing, explicitly mention that confidence is reduced.
+
+==========================================
 RULES
-==========================
+==========================================
 
 1. Return ONLY valid JSON.
 2. Never return markdown.
 3. Never wrap JSON inside \`\`\`.
-4. Never invent facts.
-5. Base conclusions only on the information provided.
-6. If information is insufficient, explicitly mention it.
-7. Confidence must be an INTEGER between 0 and 100.
-8. Never use confidence above 90 if logs are missing.
-9. Rank causes from highest confidence to lowest.
-10. Every cause MUST contain:
+4. Confidence must be an integer (0-100).
+5. Never exceed 90 confidence unless strong evidence exists.
+6. Every possible cause MUST include:
    - cause
    - confidence
    - reasoning
    - suggestedFix
-11. suggestedFix must never be empty.
-12. Recommendations must be actionable and incident-specific.
-13. Avoid generic advice.
+7. suggestedFix must never be empty.
+8. Recommendations must be practical and actionable.
 
-Return EXACTLY this JSON:
+Return EXACTLY:
 
 {
   "summary": "",
@@ -50,7 +104,7 @@ Return EXACTLY this JSON:
 }
 
 ==================================================
-INCIDENT
+CURRENT INCIDENT
 ==================================================
 
 Title:
@@ -90,7 +144,7 @@ ${monitoring.currentStatus || "Unknown"}
 Expected Status:
 ${monitoring.expectedStatus || "Unknown"}
 
-Last HTTP Status:
+HTTP Status:
 ${monitoring.httpStatus || "Unknown"}
 
 Response Time:
@@ -107,42 +161,66 @@ ${monitoring.interval ?? "Unknown"} sec
 
 Last Checked:
 ${monitoring.lastCheckedAt || "Unknown"}
-==========================
+
+==================================================
 RECENT HEALTH CHECKS
-==========================
+==================================================
 
 ${healthHistory.length === 0
-
-? "No health history available."
-
-: healthHistory.map(check => `
+    ? "No health history available."
+    : healthHistory.map(check => `
 
 Time: ${check.checkedAt}
-
 Status: ${check.currentStatus}
-
-HTTP: ${check.httpStatus}
-
-Response: ${check.responseTime} ms
-
+HTTP Status: ${check.httpStatus}
+Response Time: ${check.responseTime} ms
 Error: ${check.error}
 
 `).join("\n")
 }
+
 ==================================================
 TIMELINE
 ==================================================
 
 ${timeline.length === 0
-? "No timeline available."
-: timeline.map(item => `
+    ? "No timeline available."
+    : timeline.map(item => `
+
 Time: ${item.createdAt}
 
 Event: ${item.eventType}
 
 Message: ${item.message}
+
 `).join("\n")
 }
+
+==================================================
+SIMILAR HISTORICAL INCIDENTS
+==================================================
+
+${similarIncidentContext}
+
+==================================================
+FINAL INSTRUCTIONS
+==================================================
+
+1. Analyze the current incident first.
+
+2. Compare it with the historical incidents.
+
+3. If a similarity score is above 90%, explicitly explain that the incident is highly similar.
+
+4. Mention which historical incident influenced your reasoning.
+
+5. Never copy previous answers blindly.
+
+6. Explain why the current incident is similar or different.
+
+7. If no relevant incidents exist, explicitly state that.
+
+8. Return ONLY valid JSON.
 
 `;
 };

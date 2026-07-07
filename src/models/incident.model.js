@@ -207,7 +207,15 @@ aiGeneratedAt: {
                 },
             },
         ],
+postmortem: {
 
+    type: mongoose.Schema.Types.ObjectId,
+
+    ref: "postmortem",
+
+    default: null,
+
+},
         aiPostmortem: {
             type: String,
             default: "",
