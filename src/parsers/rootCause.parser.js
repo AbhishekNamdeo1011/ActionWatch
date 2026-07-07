@@ -14,7 +14,7 @@ export const parseRootCause = (text) => {
 
             cleaned = cleaned
                 .replace(/^```json/i, "")
-                .replace(/^```/, "")
+                .replace(/^```/, "") 
                 .replace(/```$/, "")
                 .trim();
 

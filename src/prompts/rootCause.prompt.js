@@ -1,7 +1,8 @@
 export const buildRootCausePrompt = (
     incident,
     timeline,
-    monitoring = {}
+    monitoring = {},
+    healthHistory
 ) => {
 
     return `
@@ -106,7 +107,28 @@ ${monitoring.interval ?? "Unknown"} sec
 
 Last Checked:
 ${monitoring.lastCheckedAt || "Unknown"}
+==========================
+RECENT HEALTH CHECKS
+==========================
 
+${healthHistory.length === 0
+
+? "No health history available."
+
+: healthHistory.map(check => `
+
+Time: ${check.checkedAt}
+
+Status: ${check.currentStatus}
+
+HTTP: ${check.httpStatus}
+
+Response: ${check.responseTime} ms
+
+Error: ${check.error}
+
+`).join("\n")
+}
 ==================================================
 TIMELINE
 ==================================================

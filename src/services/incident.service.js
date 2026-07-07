@@ -4,7 +4,9 @@ import {
     INCIDENT_STATUS,
     INCIDENT_SEVERITY,
 } from "../constants/incident.constants.js";
-
+import {
+    storeVector,
+} from "./rag.service.js";
 import {
     emitIncidentUpdated,
 } from "../sockets/socket.events.js";
@@ -730,6 +732,13 @@ export const resolveAutomaticIncident = async (
     incident.mttr = mttr;
 
     await incident.save();
+
+    console.log("Uploading incident embedding...");
+
+    await storeVector(incident);
+
+    console.log("Incident embedding uploaded.");
+
     await createTimelineEntry({
 
         incidentId: incident._id,
@@ -747,6 +756,7 @@ export const resolveAutomaticIncident = async (
         }
 
     });
+
     return incident;
 
 };

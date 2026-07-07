@@ -474,40 +474,57 @@ Update Service Failure
 */
 
 export const updateServiceFailure = async (
-  serviceId,
-
+    serviceId,
     error,
-
     statusCode = null
 ) => {
 
-    return ServiceModel.findByIdAndUpdate(
+    const service = await ServiceModel.findById(serviceId);
 
-        serviceId,
+    if (!service) {
 
-        {
+        const err = new Error("Service not found");
+        err.statusCode = 404;
+        throw err;
 
-              currentStatus:"DOWN",
+    }
 
-    lastCheckedAt:new Date(),
+    /*
+    ==========================================
+    Incident Already Active
+    ==========================================
+    */
 
-    lastHttpStatus:statusCode,
+    if (service.activeIncident) {
 
-    lastError:error,
+        service.currentStatus = "DOWN";
+        service.lastCheckedAt = new Date();
+        service.lastFailureAt = new Date();
+        service.lastHttpStatus = statusCode;
+        service.lastError = error;
 
-    $inc:{
-        consecutiveFailures:1
-    },
+        await service.save();
 
-        },
+        return service;
 
-        {
+    }
 
-            new: true,
+    /*
+    ==========================================
+    Increase Failure Count
+    ==========================================
+    */
 
-        }
+    service.currentStatus = "DOWN";
+    service.lastCheckedAt = new Date();
+    service.lastFailureAt = new Date();
+    service.lastHttpStatus = statusCode;
+    service.lastError = error;
+    service.consecutiveFailures += 1;
 
-    );
+    await service.save();
+
+    return service;
 
 };
 /*

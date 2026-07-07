@@ -12,6 +12,10 @@ const config = {
   MONGO_URI: process.env.MONGO_URI,
   JWT_SECRET: process.env.JWT_SECRET,
   GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+  PINECONE_API_KEY: process.env.PINECONE_API_KEY,
+  PINECONE_INDEX: process.env.PINECONE_INDEX,
+  PINECONE_HOST: process.env.PINECONE_HOST,
+  PINECONE_NAMESPACE: process.env.PINECONE_NAMESPACE,
 }
 
 export default config;  

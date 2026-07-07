@@ -9,7 +9,11 @@ import {
     setActiveIncident,
     clearActiveIncident,
 } from "../services/service.service.js";
+import {
 
+    createHealthCheck,
+
+} from "./healthCheck.service.js";
 import {
     createAutomaticIncident,
     resolveAutomaticIncident,
@@ -30,90 +34,152 @@ export const runHealthChecks = async () => {
         console.log("URL:", service.url);
         console.log("--------------------------------");
 
-        try {
+   try {
 
-            const start = Date.now();
+    const start = Date.now();
 
-            const response = await axios({
+    const response = await axios({
 
-                method: service.method,
+        method: service.method,
 
-                url: service.url,
+        url: service.url,
 
-                timeout: service.timeout,
+        timeout: service.timeout,
 
-                validateStatus: () => true,
+        validateStatus: () => true,
 
-            });
+    });
 
-            const responseTime = Date.now() - start;
+    const responseTime = Date.now() - start;
 
-            if (response.status === service.expectedStatus) {
+    if (response.status === service.expectedStatus) {
 
-                // Update service as healthy
-                const updatedService = await updateServiceSuccess(
-                    service._id,
+        const updatedService = await updateServiceSuccess(
 
-                    responseTime,
+            service._id,
 
-                    response.status
-                );
+            responseTime,
 
-                console.log("Status:", response.status);
-                console.log("Response:", responseTime, "ms");
-                console.log("Health: UP");
+            response.status
 
-                /*
-                ==========================================
-                Automatic Recovery
-                ==========================================
-                */
+        );
 
-                if (updatedService.activeIncident) {
+        await createHealthCheck({
 
-                    console.log("✅ Service Recovered");
+            service: service._id,
 
-                    await resolveAutomaticIncident(
-                        updatedService.activeIncident
-                    );
+            currentStatus: "UP",
 
-                    await clearActiveIncident(
-                        updatedService._id
-                    );
+            httpStatus: response.status,
 
-                    console.log(
-                        "✅ Incident Resolved Automatically"
-                    );
+            responseTime,
 
-                }
+            error: "",
 
-            } else {
+        });
 
-                await handleFailure( service,
+        console.log("Status:", response.status);
+        console.log("Response:", responseTime, "ms");
+        console.log("Health: UP");
 
-    response.status,
+        if (updatedService.activeIncident) {
 
-    `Expected ${service.expectedStatus} but received ${response.status}`);
+            console.log("✅ Service Recovered");
 
-                console.log("Status:", response.status);
-                console.log("Expected:", service.expectedStatus);
-                console.log("Health: DOWN");
+            await resolveAutomaticIncident(
+                updatedService.activeIncident
+            );
 
-            }
+            await clearActiveIncident(
+                updatedService._id
+            );
 
-        } catch (err) {
-
-            await handleFailure(service,
-
-    null,
-
-    err.message);
-
-            console.log("FAILED:", err.message);
+            console.log("✅ Incident Resolved Automatically");
 
         }
 
-        console.log("");
+    } else {
+
+        await handleFailure(
+
+            service,
+
+            response.status,
+
+            `Expected ${service.expectedStatus} but received ${response.status}`
+
+        );
+
+        await createHealthCheck({
+
+            service: service._id,
+
+            currentStatus: "DOWN",
+
+            httpStatus: response.status,
+
+            responseTime,
+
+            error: `Expected ${service.expectedStatus} but received ${response.status}`,
+
+        });
+
+        console.log("Status:", response.status);
+        console.log("Expected:", service.expectedStatus);
+        console.log("Health: DOWN");
+
+    }
+
+} catch (err) {
+
+    await handleFailure(
+
+        service,
+
+        null,
+
+        err.message
+
+    );
+
+    await createHealthCheck({
+
+        service: service._id,
+
+        currentStatus: "DOWN",
+
+        httpStatus: null,
+
+        responseTime: null,
+
+        error: err.message,
+
+    });
+
+// console.log("FAILED:");
+// console.error(err);
+// console.log("Message:", err.message);
+// console.log("Code:", err.code);
+// console.log("Name:", err.name);
+// console.log("Response:", err.response?.data);
+// console.log("Status:", err.response?.status);
+}
+
+console.log("");
+        // await createHealthCheck({
+
+        //     service: service._id,
+
+        //     currentStatus: "DOWN",
+
+        //     httpStatus: null,
+
+        //     responseTime: null,
+
+        //     error: err.message,
+
+        // });
+        // console.log("");
 
     }
 
@@ -125,43 +191,117 @@ Handle Monitoring Failure
 ==========================================
 */
 
-async function handleFailure(service,
+/*
+==========================================
+Handle Monitoring Failure
+==========================================
+*/
 
+async function handleFailure(
+    service,
     statusCode,
+    errorMessage
+) {
 
-    errorMessage) {
+    /*
+    ==========================================
+    Fetch Latest Service
+    ==========================================
+    */
 
-    await updateServiceFailure( service._id,
-
-    errorMessage,
-
-    statusCode);
-
-    const updatedService = await ServiceModel.findById(
+    const latestService = await ServiceModel.findById(
         service._id
     );
 
+    /*
+    ==========================================
+    Incident Already Active
+    ==========================================
+    */
+
+    if (latestService.activeIncident) {
+
+        await ServiceModel.findByIdAndUpdate(
+
+            latestService._id,
+
+            {
+
+                currentStatus: "DOWN",
+
+                lastCheckedAt: new Date(),
+
+                lastFailureAt: new Date(),
+
+                lastHttpStatus: statusCode,
+
+                lastError: errorMessage,
+
+            },
+
+            {
+
+                returnDocument: "after",
+
+            }
+
+        );
+
+        console.log("🚨 Incident Already Active");
+
+        console.log(
+            `Failures: ${latestService.failureThreshold}/${latestService.failureThreshold}`
+        );
+
+        return;
+
+    }
+
+    /*
+    ==========================================
+    Increase Failure Count
+    ==========================================
+    */
+
+    const updatedService =
+        await updateServiceFailure(
+
+            latestService._id,
+
+            errorMessage,
+
+            statusCode
+
+        );
+
     console.log(
-        "Failures:",
-        updatedService.consecutiveFailures,
-        "/",
-        updatedService.failureThreshold
+        `Failures: ${updatedService.consecutiveFailures}/${updatedService.failureThreshold}`
     );
 
-    if (
-        updatedService.consecutiveFailures >=
-        updatedService.failureThreshold &&
-        !updatedService.activeIncident
-    ) {
+    /*
+    ==========================================
+    Create Incident
+    ==========================================
+    */
 
+    if (
+
+        updatedService.consecutiveFailures >=
+        updatedService.failureThreshold
+
+    ) {
+ 
         const incident =
             await createAutomaticIncident(
                 updatedService
             );
 
         await setActiveIncident(
+
             updatedService._id,
+
             incident._id
+
         );
 
         console.log(

@@ -2,11 +2,18 @@ import ai from "./ai.service.js";
 
 import IncidentModel from "../models/incident.model.js";
 import ServiceModel from "../models/service.model.js";
+import {
 
+    getRecentHealthChecks,
+
+} from "../services/healthCheck.service.js";
 import {
     getTimelineByIncident,
     createTimelineEntry,
 } from "../services/timeline.service.js";
+import {
+    storeVector,
+} from "./rag.service.js";
 
 import { buildRootCausePrompt } from "../prompts/rootCause.prompt.js";
 
@@ -84,7 +91,17 @@ export const generateRootCause = async (
                 incident._id,
 
         });
+const healthHistory = service
 
+? await getRecentHealthChecks(
+
+    service._id,
+
+    10
+
+)
+
+: [];
     const monitoring = service
 
 ? {
@@ -136,7 +153,8 @@ export const generateRootCause = async (
 
             timeline,
 
-            monitoring
+            monitoring,
+            healthHistory
 
         );
 
@@ -203,6 +221,24 @@ incident.aiGeneratedAt =
     new Date();
 
 await incident.save();
+console.log("Step 1");
+/*
+==========================================
+Store Embedding
+==========================================
+*/
+
+console.log(
+    "Uploading incident to Pinecone..."
+);
+
+await storeVector(
+    incident
+);
+console.log("Step 2");
+console.log(
+    "Incident uploaded successfully."
+);
 
     /*
     ==========================================
