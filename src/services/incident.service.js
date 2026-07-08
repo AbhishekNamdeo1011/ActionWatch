@@ -1,4 +1,5 @@
 import IncidentModel from '../models/incident.model.js';
+import UserModel from "../models/user.model.js";
 import mongoose from "mongoose";
 import {
     INCIDENT_STATUS,
@@ -17,7 +18,7 @@ import {
 import { emitResponderRemoved } from "../sockets/socket.events.js";
 import { createTimelineEntry } from "./timeline.service.js";
 import { generatePostmortem } from "./postmortem.service.js";
-
+import { findBestResponder } from "./assignment.service.js";
 export const createIncidentService = async (incidentData) => {
     const incident = await IncidentModel.create({
         ...incidentData,
@@ -691,7 +692,60 @@ export const createAutomaticIncident = async (
         detectedAt: new Date(),
 
     });
+    console.log("Service Name:", service.name);
 
+const responder =
+    await findBestResponder(
+        service.name
+    );
+
+console.log("Responder:", responder);
+    if (responder) {
+
+    incident.assignedTo = [
+
+        responder._id
+
+    ];
+
+    await incident.save();
+await createTimelineEntry({
+
+    incidentId: incident._id,
+
+    eventType: "INCIDENT_ASSIGNED",
+
+    message: `Automatically assigned to ${responder.username}.`,
+
+    metadata: {
+
+        user: responder._id,
+
+        automatic: true,
+
+    },
+
+});
+}
+if (responder) {
+
+    await UserModel.findByIdAndUpdate(
+
+        responder._id,
+
+        {
+
+            $inc: {
+
+                activeIncidents: 1,
+
+            },
+
+        }
+
+    );
+
+}
     await createTimelineEntry({
 
         incidentId: incident._id,
@@ -711,7 +765,25 @@ export const createAutomaticIncident = async (
         }
 
     });
+if (responder) {
 
+    console.log(
+
+        "✅ Assigned:",
+
+        responder.username
+
+    );
+
+} else {
+
+    console.log(
+
+        "⚠ No responder available."
+
+    );
+
+}
     return incident;
 
 };
@@ -771,7 +843,31 @@ await generatePostmortem(
         }
 
     });
+if (
 
+    incident.assignedTo.length
+
+) {
+
+    await UserModel.findByIdAndUpdate(
+
+        incident.assignedTo[0],
+
+        {
+
+            $inc: {
+
+                activeIncidents: -1,
+
+            },
+
+        }
+
+    );
+
+}
     return incident;
 
 };
+
+

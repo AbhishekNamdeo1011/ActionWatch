@@ -1,7 +1,7 @@
 import { body, validationResult } from "express-validator";
 
 const allowedRoles = ["admin", "responder", "viewer"];
-const allowedExpertise = ["backend", "frontend", "database", "devops", "network", "security"];
+
  const handleValidationErrors = (req, res, next) => {
 	const errors = validationResult(req);
 
@@ -39,9 +39,7 @@ const validateRegistration = [
 	body("expertise")
 		.optional()
 		.isArray()
-		.withMessage("Expertise must be an array of skills")
-		.custom((value) => Array.isArray(value) && value.every((skill) => allowedExpertise.includes(skill)))
-		.withMessage(`Expertise items must be one of: ${allowedExpertise.join(", ")}`),
+		.withMessage("Expertise must be an array of skills"),
         handleValidationErrors
 ];
 const validateLogin = [

@@ -29,10 +29,20 @@ const userSchema = new mongoose.Schema({
     default: null,
     trim: true,
     lowercase: true
-  },
-  isAvailable: {
-  type: Boolean,
-  default: true
+  },activeIncidents: {
+
+    type: Number,
+
+    default: 0,
+
+},
+
+isAvailable: {
+
+    type: Boolean,
+
+    default: true,
+
 },
 createdAt: {
   type: Date,
