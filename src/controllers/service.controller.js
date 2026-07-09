@@ -6,6 +6,7 @@ import {
     deleteService,
     toggleService,
 } from "../services/service.service.js";
+import asyncHandler from "../utils/asyncHandler.js";
 
 /*
 ==========================================
@@ -13,57 +14,27 @@ Create Service
 ==========================================
 */
 
-export const createServiceController = async (req, res) => {
+export const createServiceController = asyncHandler(async (req, res) => {
 
-    try {
+    const service = await createService({
 
-        const service = await createService({
+        ...req.body,
 
-            ...req.body,
+        createdBy: req.user._id,
 
-            createdBy: req.user._id,
+    });
 
-        });
+    return res.status(201).json({
 
-        return res.status(201).json({
+        success: true,
 
-            success: true,
+        message: "Service created successfully.",
 
-            message: "Service created successfully.",
+        data: service,
 
-            data: service,
+    });
 
-        });
-
-    }
-
-    catch (error) {
-
-        if (error.statusCode) {
-
-            return res.status(error.statusCode).json({
-
-                success: false,
-
-                message: error.message,
-
-            });
-
-        }
-
-        console.error(error);
-
-        return res.status(500).json({
-
-            success: false,
-
-            message: "Internal Server Error",
-
-        });
-
-    }
-
-};
+});
 
 /*
 ==========================================
@@ -71,46 +42,29 @@ Get All Services
 ==========================================
 */
 
-export const getServicesController = async (req, res) => {
+export const getServicesController = asyncHandler(async (req, res) => {
 
-    try {
+    const result = await getServices(
 
-        const result = await getServices(
+        req.user._id,
 
-            req.user._id,
+        req.query
 
-            req.query
+    );
 
-        );
-        return res.status(200).json({
+    return res.status(200).json({
 
-            success: true,
+        success: true,
 
-            message: "Services fetched successfully.",
+        message: "Services fetched successfully.",
 
-            data: result.services,
+        data: result.services,
 
-            pagination: result.pagination,
+        pagination: result.pagination,
 
-        });
+    });
 
-    }
-
-    catch (error) {
-
-        console.error(error);
-
-        return res.status(500).json({
-
-            success: false,
-
-            message: "Internal Server Error",
-
-        });
-
-    }
-
-};
+});
 
 /*
 ==========================================
@@ -118,56 +72,27 @@ Get Service By ID
 ==========================================
 */
 
-export const getServiceByIdController = async (req, res) => {
+export const getServiceByIdController = asyncHandler(async (req, res) => {
 
-    try {
+    const service = await getServiceById(
 
-        const service = await getServiceById(
+        req.params.serviceId,
 
-            req.params.serviceId,
-            req.user._id
+        req.user._id
 
-        );
+    );
 
-        return res.status(200).json({
+    return res.status(200).json({
 
-            success: true,
+        success: true,
 
-            message: "Service fetched successfully.",
+        message: "Service fetched successfully.",
 
-            data: service,
+        data: service,
 
-        });
+    });
 
-    }
-
-    catch (error) {
-
-        if (error.statusCode) {
-
-            return res.status(error.statusCode).json({
-
-                success: false,
-
-                message: error.message,
-
-            });
-
-        }
-
-        console.error(error);
-
-        return res.status(500).json({
-
-            success: false,
-
-            message: "Internal Server Error",
-
-        });
-
-    }
-
-};
+});
 
 /*
 ==========================================
@@ -175,55 +100,29 @@ Update Service
 ==========================================
 */
 
-export const updateServiceController = async (req, res) => {
+export const updateServiceController = asyncHandler(async (req, res) => {
 
-    try {
+    const service = await updateService(
 
-        await updateService(
-            req.params.serviceId,
-            req.user._id,
-            req.body
-        );
+        req.params.serviceId,
 
-        return res.status(200).json({
+        req.user._id,
 
-            success: true,
+        req.body
 
-            message: "Service updated successfully.",
+    );
 
-            data: service,
+    return res.status(200).json({
 
-        });
+        success: true,
 
-    }
+        message: "Service updated successfully.",
 
-    catch (error) {
+        data: service,
 
-        if (error.statusCode) {
+    });
 
-            return res.status(error.statusCode).json({
-
-                success: false,
-
-                message: error.message,
-
-            });
-
-        }
-
-        console.error(error);
-
-        return res.status(500).json({
-
-            success: false,
-
-            message: "Internal Server Error",
-
-        });
-
-    }
-
-};
+});
 
 /*
 ==========================================
@@ -231,51 +130,25 @@ Delete Service
 ==========================================
 */
 
-export const deleteServiceController = async (req, res) => {
+export const deleteServiceController = asyncHandler(async (req, res) => {
 
-    try {
-        await deleteService(
-            req.params.serviceId,
-            req.user._id
-        );
+    await deleteService(
 
-        return res.status(200).json({
+        req.params.serviceId,
 
-            success: true,
+        req.user._id
 
-            message: "Service deleted successfully.",
+    );
 
-        });
+    return res.status(200).json({
 
-    }
+        success: true,
 
-    catch (error) {
+        message: "Service deleted successfully.",
 
-        if (error.statusCode) {
+    });
 
-            return res.status(error.statusCode).json({
-
-                success: false,
-
-                message: error.message,
-
-            });
-
-        }
-
-        console.error(error);
-
-        return res.status(500).json({
-
-            success: false,
-
-            message: "Internal Server Error",
-
-        });
-
-    }
-
-};
+});
 
 /*
 ==========================================
@@ -283,51 +156,24 @@ Toggle Monitoring
 ==========================================
 */
 
-export const toggleServiceController = async (req, res) => {
+export const toggleServiceController = asyncHandler(async (req, res) => {
 
-    try {
+    const service = await toggleService(
 
-        await toggleService(
-            req.params.serviceId,
-            req.user._id
-        );
+        req.params.serviceId,
 
-        return res.status(200).json({
+        req.user._id
 
-            success: true,
+    );
 
-            message: "Monitoring status updated.",
+    return res.status(200).json({
 
-            data: service,
+        success: true,
 
-        });
+        message: "Monitoring status updated.",
 
-    }
+        data: service,
 
-    catch (error) {
+    });
 
-        if (error.statusCode) {
-
-            return res.status(error.statusCode).json({
-
-                success: false,
-
-                message: error.message,
-
-            });
-
-        }
-
-        console.error(error);
-
-        return res.status(500).json({
-
-            success: false,
-
-            message: "Internal Server Error",
-
-        });
-
-    }
-
-};
+});

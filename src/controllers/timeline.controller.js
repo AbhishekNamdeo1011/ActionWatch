@@ -2,6 +2,7 @@ import {
     createTimelineEntry,
     getTimelineByIncident,
 } from "../services/timeline.service.js";
+import asyncHandler from "../utils/asyncHandler.js";
 
 /*
 ==========================================
@@ -9,87 +10,53 @@ Create Timeline Entry
 ==========================================
 */
 
-export const createTimeline = async (
-    req,
-    res
-) => {
+export const createTimeline = asyncHandler(async (req, res) => {
 
-    try {
+    const { incidentId } = req.params;
 
-        const { incidentId } = req.params;
+    const {
+        message,
+        eventType,
+        metadata = {},
+    } = req.body;
 
-        const {
-            message,
-            eventType,
-            metadata = {},
-        } = req.body;
+    if (!message?.trim()) {
 
-        if (!message?.trim()) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message: "Message is required.",
-
-            });
-
-        }
-
-        const timeline =
-            await createTimelineEntry({
-
-                incidentId,
-
-                author: req.user._id,
-
-                eventType,
-
-                message: message.trim(),
-
-                metadata,
-
-            });
-
-        return res.status(201).json({
-
-            success: true,
-
-            message: "Timeline entry created successfully.",
-
-            data: timeline,
-
-        });
-
-    }
-
-    catch (error) {
-
-        if (error.statusCode) {
-
-            return res.status(error.statusCode).json({
-
-                success: false,
-
-                message: error.message,
-
-            });
-
-        }
-
-        console.error(error);
-
-        return res.status(500).json({
+        return res.status(400).json({
 
             success: false,
 
-            message: "Internal Server Error",
+            message: "Message is required.",
 
         });
 
     }
 
-};
+    const timeline = await createTimelineEntry({
+
+        incidentId,
+
+        author: req.user._id,
+
+        eventType,
+
+        message: message.trim(),
+
+        metadata,
+
+    });
+
+    return res.status(201).json({
+
+        success: true,
+
+        message: "Timeline entry created successfully.",
+
+        data: timeline,
+
+    });
+
+});
 
 /*
 ==========================================
@@ -97,56 +64,22 @@ Get Incident Timeline
 ==========================================
 */
 
-export const getIncidentTimeline = async (
-    req,
-    res
-) => {
+export const getIncidentTimeline = asyncHandler(async (req, res) => {
 
-    try {
+    const timeline = await getTimelineByIncident(
 
-        const timeline =
-            await getTimelineByIncident(
+        req.params.incidentId
 
-                req.params.incidentId
+    );
 
-            );
+    return res.status(200).json({
 
-        return res.status(200).json({
+        success: true,
 
-            success: true,
+        message: "Timeline fetched successfully.",
 
-            message: "Timeline fetched successfully.",
+        data: timeline,
 
-            data: timeline,
+    });
 
-        });
-
-    }
-
-    catch (error) {
-
-        if (error.statusCode) {
-
-            return res.status(error.statusCode).json({
-
-                success: false,
-
-                message: error.message,
-
-            });
-
-        }
-
-        console.error(error);
-
-        return res.status(500).json({
-
-            success: false,
-
-            message: "Internal Server Error",
-
-        });
-
-    }
-
-};
+});

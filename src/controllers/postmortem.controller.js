@@ -1,110 +1,43 @@
 import {
     generatePostmortem,
 } from "../services/postmortem.service.js";
+import asyncHandler from "../utils/asyncHandler.js";
 
-export const generateIncidentPostmortem = async (
+export const generateIncidentPostmortem = asyncHandler(async (
     req,
     res
 ) => {
 
-    try {
+    const postmortem = await generatePostmortem(req.params.incidentId);
 
-        const postmortem =
-            await generatePostmortem(
+    return res.status(200).json({
 
-                req.params.incidentId
+        success: true,
 
-            );
+        message: "AI postmortem generated successfully.",
 
-        return res.status(200).json({
+        data: postmortem,
 
-            success: true,
+    });
 
-            message: "AI postmortem generated successfully.",
-
-            data: postmortem,
-
-        });
-
-    }
-
-    catch (error) {
-
-        if (error.statusCode) {
-
-            return res.status(error.statusCode).json({
-
-                success: false,
-
-                message: error.message,
-
-            });
-
-        }
-
-        console.error(error);
-
-        return res.status(500).json({
-
-            success: false,
-
-            message: "Internal Server Error",
-
-        });
-
-    }
-
-};
+});
 import {
     getPostmortem,
 } from "../services/postmortem.service.js";
 
-export const getIncidentPostmortem = async (
+export const getIncidentPostmortem = asyncHandler(async (
     req,
     res
 ) => {
 
-    try {
+    const postmortem = await getPostmortem(req.params.incidentId);
 
-        const postmortem =
-            await getPostmortem(
+    return res.status(200).json({
 
-                req.params.incidentId
+        success: true,
 
-            );
+        data: postmortem,
 
-        return res.status(200).json({
+    });
 
-            success: true,
-
-            data: postmortem,
-
-        });
-
-    }
-
-    catch (error) {
-
-        if (error.statusCode) {
-
-            return res.status(error.statusCode).json({
-
-                success: false,
-
-                message: error.message,
-
-            });
-
-        }
-
-        return res.status(500).json({
-
-            success: false,
-
-            message: "Internal Server Error",
-
-        });
-
-    }
-
-};
+});

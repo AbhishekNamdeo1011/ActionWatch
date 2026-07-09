@@ -15,15 +15,11 @@ export const startMonitoring = () => {
 
         console.log("\nRunning Health Checks...");
 
-        try {
-
-            await runHealthChecks();
-
-        } catch (err) {
+        await runHealthChecks().catch((err) => {
 
             console.error("Scheduler Error:", err.message);
 
-        }
+        });
 
     });
 

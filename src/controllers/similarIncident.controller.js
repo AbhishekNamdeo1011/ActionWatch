@@ -3,63 +3,18 @@ import {
     getSimilarIncidents,
 
 } from "../services/similarIncident.service.js";
+import asyncHandler from "../utils/asyncHandler.js";
 
-export const getIncidentSimilar = async (
+export const getIncidentSimilar = asyncHandler(async (req, res) => {
 
-    req,
+    const data = await getSimilarIncidents(req.params.incidentId);
 
-    res
+    return res.status(200).json({
 
-) => {
+        success: true,
 
-    try {
+        data,
 
-        const data =
+    });
 
-            await getSimilarIncidents(
-
-                req.params.incidentId
-
-            );
-
-        return res.status(200).json({
-
-            success: true,
-
-            data,
-
-        });
-
-    }
-
-    catch (error) {
-
-        if (error.statusCode) {
-
-            return res.status(
-
-                error.statusCode
-
-            ).json({
-
-                success: false,
-
-                message: error.message,
-
-            });
-
-        }
-
-        console.error(error);
-
-        return res.status(500).json({
-
-            success: false,
-
-            message: "Internal Server Error",
-
-        });
-
-    }
-
-};
+});

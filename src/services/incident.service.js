@@ -19,6 +19,7 @@ import { emitResponderRemoved } from "../sockets/socket.events.js";
 import { createTimelineEntry } from "./timeline.service.js";
 import { generatePostmortem } from "./postmortem.service.js";
 import { findBestResponder } from "./assignment.service.js";
+import { notifyIncidentAssigned } from "./notification.service.js";
 export const createIncidentService = async (incidentData) => {
     const incident = await IncidentModel.create({
         ...incidentData,
@@ -113,30 +114,30 @@ export const getIncidentsService = async (queryParams) => {
 
     if (search) {
 
-       filter.$or = [
+        filter.$or = [
 
-    {
-        title: {
-            $regex: search,
-            $options: "i",
-        },
-    },
+            {
+                title: {
+                    $regex: search,
+                    $options: "i",
+                },
+            },
 
-    {
-        description: {
-            $regex: search,
-            $options: "i",
-        },
-    },
+            {
+                description: {
+                    $regex: search,
+                    $options: "i",
+                },
+            },
 
-    {
-        errorLogs: {
-            $regex: search,
-            $options: "i",
-        },
-    },
+            {
+                errorLogs: {
+                    $regex: search,
+                    $options: "i",
+                },
+            },
 
-];
+        ];
 
     }
 
@@ -148,17 +149,17 @@ export const getIncidentsService = async (queryParams) => {
 
         .find(filter)
         .select(
-    "title severity status service affectedUsers detectedAt createdAt assignedTo"
-)
+            "title severity status service affectedUsers detectedAt createdAt assignedTo"
+        )
 
         .populate(
             "createdBy",
             "username role"
         )
-.populate(
-    "assignedTo",
-    "username role"
-)
+        .populate(
+            "assignedTo",
+            "username role"
+        )
         .sort(sort)
 
         .skip(skip)
@@ -536,7 +537,13 @@ export const assignResponderService = async (
     incident.assignedTo.push(userId);
 
     await incident.save();
+    await notifyIncidentAssigned(
 
+        user,
+
+        incident
+
+    );
     await incident.populate([
         {
             path: "createdBy",
@@ -640,23 +647,23 @@ export const removeResponderService = async (
     ]);
 
     emitResponderRemoved(incident);
-await createTimelineEntry({
+    await createTimelineEntry({
 
-    incidentId: incident._id,
+        incidentId: incident._id,
 
-    author: userId,
+        author: userId,
 
-    eventType: "RESPONDER_REMOVED",
+        eventType: "RESPONDER_REMOVED",
 
-    message: "Responder removed from incident.",
+        message: "Responder removed from incident.",
 
-    metadata: {
+        metadata: {
 
-        userId,
+            userId,
 
-    }
+        }
 
-});
+    });
     return incident;
 };
 
@@ -694,58 +701,75 @@ export const createAutomaticIncident = async (
     });
     console.log("Service Name:", service.name);
 
-const responder =
-    await findBestResponder(
-        service.name
-    );
+    const responder =
+        await findBestResponder(
+            service.name
+        );
 
-console.log("Responder:", responder);
+    console.log("Responder:", responder);
     if (responder) {
 
-    incident.assignedTo = [
+        incident.assignedTo = [
 
-        responder._id
+            responder._id
 
-    ];
+        ];
 
-    await incident.save();
-await createTimelineEntry({
+        await incident.save();
+        await createTimelineEntry({
 
-    incidentId: incident._id,
+            incidentId: incident._id,
 
-    eventType: "INCIDENT_ASSIGNED",
+            eventType: "INCIDENT_ASSIGNED",
 
-    message: `Automatically assigned to ${responder.username}.`,
+            message: `Automatically assigned to ${responder.username}.`,
 
-    metadata: {
+            metadata: {
 
-        user: responder._id,
+                user: responder._id,
 
-        automatic: true,
-
-    },
-
-});
-}
-if (responder) {
-
-    await UserModel.findByIdAndUpdate(
-
-        responder._id,
-
-        {
-
-            $inc: {
-
-                activeIncidents: 1,
+                automatic: true,
 
             },
 
-        }
+        });
+    }
+    if (responder) {
 
-    );
+        await UserModel.findByIdAndUpdate(
 
-}
+            responder._id,
+
+            {
+
+                $inc: {
+
+                    activeIncidents: 1,
+
+                },
+
+            }
+
+        );
+
+    }
+    /*
+==========================================
+Notify Assigned Responder
+==========================================
+*/
+
+    if (responder) {
+
+        await notifyIncidentAssigned(
+
+            responder,
+
+            incident
+
+        );
+
+    }
     await createTimelineEntry({
 
         incidentId: incident._id,
@@ -765,25 +789,25 @@ if (responder) {
         }
 
     });
-if (responder) {
+    if (responder) {
 
-    console.log(
+        console.log(
 
-        "✅ Assigned:",
+            "✅ Assigned:",
 
-        responder.username
+            responder.username
 
-    );
+        );
 
-} else {
+    } else {
 
-    console.log(
+        console.log(
 
-        "⚠ No responder available."
+            "⚠ No responder available."
 
-    );
+        );
 
-}
+    }
     return incident;
 
 };
@@ -818,10 +842,11 @@ export const resolveAutomaticIncident = async (
 
     await incident.save();
 
+
     console.log("Uploading incident embedding...");
-await generatePostmortem(
-    incident._id
-);
+    await generatePostmortem(
+        incident._id
+    );
     await storeVector(incident);
 
     console.log("Incident embedding uploaded.");
@@ -843,29 +868,29 @@ await generatePostmortem(
         }
 
     });
-if (
+    if (
 
-    incident.assignedTo.length
+        incident.assignedTo.length
 
-) {
+    ) {
 
-    await UserModel.findByIdAndUpdate(
+        await UserModel.findByIdAndUpdate(
 
-        incident.assignedTo[0],
+            incident.assignedTo[0],
 
-        {
+            {
 
-            $inc: {
+                $inc: {
 
-                activeIncidents: -1,
+                    activeIncidents: -1,
 
-            },
+                },
 
-        }
+            }
 
-    );
+        );
 
-}
+    }
     return incident;
 
 };

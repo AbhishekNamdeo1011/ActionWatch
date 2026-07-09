@@ -1,67 +1,31 @@
 import {
     generateRootCause,
 } from "../services/rootCause.service.js";
+import asyncHandler from "../utils/asyncHandler.js";
 
 export const generateIncidentRootCause =
-    async (
+    asyncHandler(async (
         req,
         res
     ) => {
 
-        try {
+        const result = await generateRootCause(
 
-            const result =
-                await generateRootCause(
+            req.params.incidentId,
 
-                    req.params.incidentId,
- req.query.force === "true"
-                );
+            req.query.force === "true"
 
-            return res.status(200).json({
+        );
 
-                success: true,
+        return res.status(200).json({
 
-                message:
-                    "AI root cause generated successfully.",
+            success: true,
 
-                data: result,
+            message:
+                "AI root cause generated successfully.",
 
-            });
+            data: result,
 
-        }
+        });
 
-        catch (error) {
-
-            if (
-                error.statusCode
-            ) {
-
-                return res
-                    .status(
-                        error.statusCode
-                    )
-                    .json({
-
-                        success: false,
-
-                        message:
-                            error.message,
-
-                    });
-
-            }
-
-            console.error(error);
-
-            return res.status(500).json({
-
-                success: false,
-
-                message:
-                    "Internal Server Error",
-
-            });
-
-        }
-
-    };
+    });

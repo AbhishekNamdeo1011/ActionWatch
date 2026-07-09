@@ -5,46 +5,21 @@ import {
     getDashboardAnalytics,
 
 } from "../services/dashboard.service.js";
+import asyncHandler from "../utils/asyncHandler.js";
 
-export const dashboard = async (
+export const dashboard = asyncHandler(async (req, res) => {
 
-    req,
+    const data = await getDashboardData();
 
-    res
+    return res.status(200).json({
 
-) => {
+        success: true,
 
-    try {
+        data,
 
-        const data =
+    });
 
-            await getDashboardData();
-
-        return res.status(200).json({
-
-            success: true,
-
-            data,
-
-        });
-
-    }
-
-    catch (error) {
-
-        console.error(error);
-
-        return res.status(500).json({
-
-            success: false,
-
-            message: "Internal Server Error",
-
-        });
-
-    }
-
-};
+});
 
 /*
 ==========================================
@@ -52,41 +27,16 @@ Dashboard Analytics
 ==========================================
 */
 
-export const analytics = async (
+export const analytics = asyncHandler(async (req, res) => {
 
-    req,
+    const data = await getDashboardAnalytics();
 
-    res
+    return res.status(200).json({
 
-) => {
+        success: true,
 
-    try {
+        data,
 
-        const data =
-            await getDashboardAnalytics();
+    });
 
-        return res.status(200).json({
-
-            success: true,
-
-            data,
-
-        });
-
-    }
-
-    catch (error) {
-
-        console.error(error);
-
-        return res.status(500).json({
-
-            success: false,
-
-            message: "Internal Server Error",
-
-        });
-
-    }
-
-};
+});

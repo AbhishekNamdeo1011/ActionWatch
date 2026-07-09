@@ -5,12 +5,9 @@ const VALID_METHODS = [
 ];
 
 const validateURL = (url) => {
-    try {
-        new URL(url);
-        return true;
-    } catch {
-        return false;
-    }
+
+    return URL.canParse(url);
+
 };
 
 /*

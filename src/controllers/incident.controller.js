@@ -6,306 +6,148 @@ import {assignResponderService} from "../services/incident.service.js";
 import {
     removeResponderService
 } from "../services/incident.service.js";
-export const createIncident = async (req, res) => {
-  try {
-    const {
-      title,
-      description,
-      severity,
-      service,
-      affectedUsers,
-      errorCode,
-      errorLogs,
-    } = req.body;
+import asyncHandler from "../utils/asyncHandler.js";
 
-    const normalizedTitle = typeof title === 'string' ? title.trim() : String(title ?? '').trim();
-    const normalizedDescription = typeof description === 'string' ? description.trim() : String(description ?? '').trim();
-    const normalizedSeverity = typeof severity === 'string' ? severity.trim() : String(severity ?? '').trim();
-    const normalizedService = typeof service === 'string' ? service.trim() : String(service ?? '').trim();
+export const createIncident = asyncHandler(async (req, res) => {
 
-    if (!normalizedTitle || !normalizedDescription || !normalizedSeverity || !normalizedService) {
-      return res.status(400).json({
-        success: false,
-        message: 'Title, description, severity and service are required.',
-      });
-    }
+  const {
+    title,
+    description,
+    severity,
+    service,
+    affectedUsers,
+    errorCode,
+    errorLogs,
+  } = req.body;
 
-    const incidentData = {
-      title: normalizedTitle,
-      description: normalizedDescription,
-      severity: normalizedSeverity,
-      service: normalizedService,
-      affectedUsers,
-      errorCode,
-      errorLogs,
-      createdBy: req.user._id,
-      detectedBy: 'manual',
-      status: 'open',
-      detectedAt: new Date(),
-    };
+  const normalizedTitle = typeof title === 'string' ? title.trim() : String(title ?? '').trim();
+  const normalizedDescription = typeof description === 'string' ? description.trim() : String(description ?? '').trim();
+  const normalizedSeverity = typeof severity === 'string' ? severity.trim() : String(severity ?? '').trim();
+  const normalizedService = typeof service === 'string' ? service.trim() : String(service ?? '').trim();
 
-    const incident = await createIncidentService(incidentData);
-
-    return res.status(201).json({
-      success: true,
-      message: 'Incident created successfully.',
-      data: incident,
-    });
-  } catch (error) {
-    if (error?.name === 'ValidationError') {
-      return res.status(400).json({
-        success: false,
-        message: error.message,
-      });
-    }
-
-    console.error('Create Incident Error:', error);
-
-    return res.status(500).json({
+  if (!normalizedTitle || !normalizedDescription || !normalizedSeverity || !normalizedService) {
+    return res.status(400).json({
       success: false,
-      message: 'Internal Server Error',
+      message: 'Title, description, severity and service are required.',
     });
   }
-};
 
-export const getIncidents = async (req, res) => {
+  const incidentData = {
+    title: normalizedTitle,
+    description: normalizedDescription,
+    severity: normalizedSeverity,
+    service: normalizedService,
+    affectedUsers,
+    errorCode,
+    errorLogs,
+    createdBy: req.user._id,
+    detectedBy: 'manual',
+    status: 'open',
+    detectedAt: new Date(),
+  };
 
-    try {
+  const incident = await createIncidentService(incidentData);
 
-        const result = await getIncidentsService(req.query);
+  return res.status(201).json({
+    success: true,
+    message: 'Incident created successfully.',
+    data: incident,
+  });
+});
 
-        return res.status(200).json({
+export const getIncidents = asyncHandler(async (req, res) => {
 
-            success: true,
+    const result = await getIncidentsService(req.query);
 
-            message: "Incidents fetched successfully.",
+    return res.status(200).json({
 
-            data: result.incidents,
+        success: true,
 
-            pagination: result.pagination,
+        message: "Incidents fetched successfully.",
 
-        });
+        data: result.incidents,
 
-    }
+        pagination: result.pagination,
 
-    catch (error) {
+    });
 
-        if (error.statusCode) {
+});
 
-            return res.status(error.statusCode).json({
+export const getIncidentById = asyncHandler(async (req, res) => {
 
-                success: false,
+    const incident = await getIncidentByIdService(
+        req.params.incidentId
+    );
 
-                message: error.message,
+    return res.status(200).json({
 
-            });
+        success: true,
 
-        }
+        message: "Incident fetched successfully.",
 
-        console.error(error);
+        data: incident
 
-        return res.status(500).json({
+    });
 
-            success: false,
+});
 
-            message: "Internal Server Error",
+export const updateIncident = asyncHandler(async (req, res) => {
 
-        });
+    const incident =
+        await updateIncidentService(
 
-    }
-
-};
-
-export const getIncidentById = async (req, res) => {
-
-    try {
-
-        const incident = await getIncidentByIdService(
-            req.params.incidentId
-        );
-
-        return res.status(200).json({
-
-            success: true,
-
-            message: "Incident fetched successfully.",
-
-            data: incident
-
-        });
-
-    }
-
-    catch (error) {
-
-        if (error.statusCode) {
-
-            return res.status(error.statusCode).json({
-
-                success: false,
-
-                message: error.message
-
-            });
-
-        }
-
-        console.error(error);
-
-        return res.status(500).json({
-
-            success: false,
-
-            message: "Internal Server Error"
-
-        });
-
-    }
-
-};
-
-export const updateIncident = async (
-    req,
-    res
-) => {
-
-    try {
-
-        const incident =
-            await updateIncidentService(
-
-                req.params.incidentId,
-
-        req.body,
-
-        req.user._id
-            );
-
-        return res.status(200).json({
-
-            success: true,
-
-            message: "Incident updated successfully.",
-
-            data: incident,
-
-        });
-
-    }
-
-    catch (error) {
-
-        if (error.statusCode) {
-
-            return res.status(error.statusCode).json({
-
-                success: false,
-
-                message: error.message,
-
-            });
-
-        }
-
-        console.error(error);
-
-        return res.status(500).json({
-
-            success: false,
-
-            message: "Internal Server Error",
-
-        });
-
-    }
-
-};
-
-export const assignResponder = async (
-    req,
-    res
-) => {
-
-    try {
-
-        const incident =
-            await assignResponderService(
-
-                req.params.incidentId,
-
-                req.body.userId
-
-            );
-
-        return res.status(200).json({
-
-            success: true,
-
-            message: "Responder assigned successfully.",
-
-            data: incident
-
-        });
-
-    }
-
-    catch (error) {
-
-        if (error.statusCode) {
-
-            return res.status(error.statusCode).json({
-
-                success: false,
-
-                message: error.message
-
-            });
-
-        }
-
-        console.error(error);
-
-        return res.status(500).json({
-
-            success: false,
-
-            message: "Internal Server Error"
-
-        });
-
-    }
-
-};
-
-export const removeResponder = async (req, res) => {
-
-    try {
-
-        const incident = await removeResponderService(
             req.params.incidentId,
-            req.params.userId
+
+            req.body,
+
+            req.user._id
         );
 
-        return res.status(200).json({
-            success: true,
-            message: "Responder removed successfully.",
-            data: incident
-        });
+    return res.status(200).json({
 
-    } catch (error) {
+        success: true,
 
-        if (error.statusCode) {
-            return res.status(error.statusCode).json({
-                success: false,
-                message: error.message
-            });
-        }
+        message: "Incident updated successfully.",
 
-        console.error(error);
+        data: incident,
 
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error"
-        });
-    }
-};
+    });
+
+});
+
+export const assignResponder = asyncHandler(async (req, res) => {
+
+    const incident =
+        await assignResponderService(
+
+            req.params.incidentId,
+
+            req.body.userId
+
+        );
+
+    return res.status(200).json({
+
+        success: true,
+
+        message: "Responder assigned successfully.",
+
+        data: incident
+
+    });
+
+});
+
+export const removeResponder = asyncHandler(async (req, res) => {
+
+    const incident = await removeResponderService(
+        req.params.incidentId,
+        req.params.userId
+    );
+
+    return res.status(200).json({
+        success: true,
+        message: "Responder removed successfully.",
+        data: incident
+    });
+});

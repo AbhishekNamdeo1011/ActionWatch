@@ -34,7 +34,43 @@ export const runHealthChecks = async () => {
         console.log("URL:", service.url);
         console.log("--------------------------------");
 
-   try {
+        await processServiceCheck(service).catch(async (err) => {
+
+            await handleFailure(
+
+                service,
+
+                null,
+
+                err.message
+
+            );
+
+            await createHealthCheck({
+
+                service: service._id,
+
+                currentStatus: "DOWN",
+
+                httpStatus: null,
+
+                responseTime: null,
+
+                error: err.message,
+
+            });
+
+            console.error("FAILED:", err.message);
+
+        });
+
+        console.log("");
+
+    }
+
+};
+
+async function processServiceCheck(service) {
 
     const start = Date.now();
 
@@ -98,47 +134,17 @@ export const runHealthChecks = async () => {
 
         }
 
-    } else {
-
-        await handleFailure(
-
-            service,
-
-            response.status,
-
-            `Expected ${service.expectedStatus} but received ${response.status}`
-
-        );
-
-        await createHealthCheck({
-
-            service: service._id,
-
-            currentStatus: "DOWN",
-
-            httpStatus: response.status,
-
-            responseTime,
-
-            error: `Expected ${service.expectedStatus} but received ${response.status}`,
-
-        });
-
-        console.log("Status:", response.status);
-        console.log("Expected:", service.expectedStatus);
-        console.log("Health: DOWN");
+        return;
 
     }
-
-} catch (err) {
 
     await handleFailure(
 
         service,
 
-        null,
+        response.status,
 
-        err.message
+        `Expected ${service.expectedStatus} but received ${response.status}`
 
     );
 
@@ -148,42 +154,19 @@ export const runHealthChecks = async () => {
 
         currentStatus: "DOWN",
 
-        httpStatus: null,
+        httpStatus: response.status,
 
-        responseTime: null,
+        responseTime,
 
-        error: err.message,
+        error: `Expected ${service.expectedStatus} but received ${response.status}`,
 
     });
 
-// console.log("FAILED:");
-// console.error(err);
-// console.log("Message:", err.message);
-// console.log("Code:", err.code);
-// console.log("Name:", err.name);
-// console.log("Response:", err.response?.data);
-// console.log("Status:", err.response?.status);
+    console.log("Status:", response.status);
+    console.log("Expected:", service.expectedStatus);
+    console.log("Health: DOWN");
+
 }
-
-console.log("");
-        // await createHealthCheck({
-
-        //     service: service._id,
-
-        //     currentStatus: "DOWN",
-
-        //     httpStatus: null,
-
-        //     responseTime: null,
-
-        //     error: err.message,
-
-        // });
-        // console.log("");
-
-    }
-
-};
 
 /*
 ==========================================
