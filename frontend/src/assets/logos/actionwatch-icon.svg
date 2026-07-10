@@ -1,0 +1,22 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+  <path
+    d="M32 6L52 18V46L32 58L12 46V18L32 6Z"
+    stroke="#CB7740"
+    stroke-width="3"
+    fill="none"
+    stroke-linejoin="round"/>
+
+  <path
+    d="M32 18L42 23V32C42 39 37.5 44.5 32 47C26.5 44.5 22 39 22 32V23L32 18Z"
+    fill="#CB7740"
+    opacity="0.15"/>
+
+  <path
+    d="M22 32H26L29 27L32 37L35 29L38 32H42"
+    stroke="#CB7740"
+    stroke-width="2.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"/>
+
+</svg>

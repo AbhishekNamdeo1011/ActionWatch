@@ -1,0 +1,20 @@
+
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import "@fontsource-variable/inter";
+import App from './App.jsx'
+import { BrowserRouter } from "react-router-dom";
+import { Toaster } from "sonner";
+import { AuthProvider } from "@/context/AuthContext";
+import AuthInitializer from "@/providers/AuthInitializer";
+createRoot(document.getElementById('root')).render(
+ <AuthProvider>
+    <AuthInitializer>
+  <BrowserRouter>
+      <App />
+         <Toaster richColors position="top-right" />
+    </BrowserRouter>
+    </AuthInitializer>
+    </AuthProvider>
+
+)

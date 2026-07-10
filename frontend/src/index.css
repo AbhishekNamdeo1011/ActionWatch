@@ -1,0 +1,95 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/inter";
+
+@custom-variant dark (&:is(.dark *));
+
+
+@theme {
+
+  --font-sans: "Inter Variable", sans-serif;
+
+  --color-background: #25212A;
+
+  --color-surface: #312C36;
+
+  --color-surface-hover: #39323E;
+
+  --color-sidebar: #201C24;
+
+  --color-border: #443C48;
+
+  --color-primary: #CB7740;
+
+  --color-primary-hover: #D98952;
+
+  --color-foreground: #F5F2EE;
+
+  --color-muted: #B6AEA9;
+
+  --color-muted-foreground: #918983;
+
+  --color-success: #3D8E63;
+
+  --color-danger: #C44A4A;
+
+  --color-warning: #D7A342;
+
+  --color-info: #5688B6;
+
+  --shadow-card: 0 18px 40px rgba(0,0,0,.28);
+
+  --radius-card: 24px;
+
+  --radius-input: 14px;
+
+  --radius-button: 14px;
+
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+
+  margin: 0;
+
+  min-height: 100vh;
+
+  background: var(--color-background);
+
+  color: var(--color-foreground);
+
+  font-family: var(--font-sans);
+
+  -webkit-font-smoothing: antialiased;
+
+  -moz-osx-font-smoothing: grayscale;
+
+}
+
+body {
+
+  margin: 0;
+
+  min-height: 100vh;
+
+  background: var(--color-background);
+
+  color: var(--color-foreground);
+
+  font-family: var(--font-sans);
+
+  -webkit-font-smoothing: antialiased;
+
+  -moz-osx-font-smoothing: grayscale;
+
+}
