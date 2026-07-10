@@ -19,6 +19,7 @@ import Dashboard from "../pages/dashboard/Dashboard";
 // Incidents
 import IncidentList from "../pages/incidents/IncidentList";
 import WarRoom from "../pages/incidents/WarRoom";
+import IncidentDetails from "@/pages/incidents/IncidentDetails";
 
 // Monitoring
 import Monitoring from "../pages/monitoring/Monitoring";
@@ -61,120 +62,142 @@ const AppRoutes = () => {
                 Public Routes
             ========================== */}
 
-            <Route
-                element={
-                    <PublicRoute>
-                        <AuthLayout />
-                    </PublicRoute>
-                }
-            >
-                <Route
-                    path="/login"
-                    element={<Login />}
-                />
+          <Route element={<PublicRoute />}>
 
-                <Route
-                    path="/register"
-                    element={<Register />}
-                />
-            </Route>
+    <Route element={<AuthLayout />}>
+
+        <Route
+            path="/login"
+            element={<Login />}
+        />
+
+        <Route
+            path="/register"
+            element={<Register />}
+        />
+
+    </Route>
+
+</Route>
 
             {/* ==========================
                 Protected Routes
             ========================== */}
 
-            <Route
-                element={
-                    <ProtectedRoute>
-                        <DashboardLayout />
-                    </ProtectedRoute>
-                }
-            >
-                {/* Dashboard */}
+            <Route element={<ProtectedRoute />}>
 
-                <Route
-                    path="/dashboard"
-                    element={<Dashboard />}
-                />
+    <Route element={<DashboardLayout />}>
 
-                {/* Incidents */}
+        <Route
 
-                <Route
-                    path="/incidents"
-                    element={<IncidentList />}
-                />
+            path="/dashboard"
 
-                <Route
-                    path="/incidents/:incidentId"
-                    element={<WarRoom />}
-                />
+            element={<Dashboard />}
 
-                {/* Monitoring */}
+        />
 
-                <Route
-                    path="/monitoring"
-                    element={<Monitoring />}
-                />
+        <Route
 
-                <Route
-                    path="/monitoring/:serviceId"
-                    element={<ServiceDetails />}
-                />
+            path="/incidents"
 
-                {/* Analytics */}
+            element={<IncidentList />}
 
-                <Route
-                    path="/analytics"
-                    element={<Analytics />}
-                />
+        />
+<Route
+    path="/incidents/:incidentId"
+    element={<IncidentDetails />}
+/>
+        {/* <Route
 
-                {/* Investigation */}
+            path="/incidents/:incidentId"
 
-                <Route
-                    path="/investigation"
-                    element={<Investigation />}
-                />
+            element={<WarRoom />}
 
-                {/* Notifications */}
+        /> */}
 
-                <Route
-                    path="/notifications"
-                    element={<Notifications />}
-                />
+        <Route
 
-                {/* Profile */}
+            path="/monitoring"
 
-                <Route
-                    path="/profile"
-                    element={<Profile />}
-                />
+            element={<Monitoring />}
 
-                {/* ==========================
-                    Admin + Owner
-                ========================== */}
+        />
 
-                <Route
-                    path="/users"
-                    element={
-                        <RoleRoute
-                            roles={["admin", "owner"]}
-                        >
-                            <UserManagement />
-                        </RoleRoute>
-                    }
-                />
+        <Route
 
-                <Route
-                    path="/settings"
-                    element={
-                        <RoleRoute
-                            roles={["admin", "owner"]}
-                        >
-                            <Settings />
-                        </RoleRoute>
-                    }
-                />
-            </Route>
+            path="/monitoring/:serviceId"
+
+            element={<ServiceDetails />}
+
+        />
+
+        <Route
+
+            path="/analytics"
+
+            element={<Analytics />}
+
+        />
+
+        <Route
+
+            path="/investigation"
+
+            element={<Investigation />}
+
+        />
+
+        <Route
+
+            path="/notifications"
+
+            element={<Notifications />}
+
+        />
+
+        <Route
+
+            path="/profile"
+
+            element={<Profile />}
+
+        />
+
+        <Route
+
+            path="/users"
+
+            element={
+
+                <RoleRoute roles={["admin","owner"]}>
+
+                    <UserManagement/>
+
+                </RoleRoute>
+
+            }
+
+        />
+
+        <Route
+
+            path="/settings"
+
+            element={
+
+                <RoleRoute roles={["admin","owner"]}>
+
+                    <Settings/>
+
+                </RoleRoute>
+
+            }
+
+        />
+
+    </Route>
+
+</Route>
 
             {/* Error Routes */}
 

@@ -7,7 +7,17 @@ import { BrowserRouter } from "react-router-dom";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/context/AuthContext";
 import AuthInitializer from "@/providers/AuthInitializer";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            retry: 1,
+            refetchOnWindowFocus: false,
+        },
+    },
+});
 createRoot(document.getElementById('root')).render(
+         <QueryClientProvider client={queryClient}>
  <AuthProvider>
     <AuthInitializer>
   <BrowserRouter>
@@ -16,5 +26,6 @@ createRoot(document.getElementById('root')).render(
     </BrowserRouter>
     </AuthInitializer>
     </AuthProvider>
+      </QueryClientProvider>
 
 )

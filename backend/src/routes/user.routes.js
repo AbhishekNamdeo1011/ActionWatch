@@ -3,6 +3,7 @@ import { Router } from "express";
 import {
 
     updateUserRole,
+    getUsers,
 
 } from "../controllers/user.controller.js";
 
@@ -25,7 +26,23 @@ import {
 } from "../constants/role.constants.js";
 
 const router = Router();
+router.get(
 
+    "/",
+
+    authMiddleware,
+
+    authorize(
+
+        USER_ROLES.ADMIN,
+
+        USER_ROLES.OWNER
+
+    ),
+
+    getUsers
+
+);
 router.patch(
 
     "/:userId/role",

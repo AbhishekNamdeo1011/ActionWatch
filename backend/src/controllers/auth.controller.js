@@ -7,6 +7,7 @@ import sessionModel from "../models/session.model.js";
 import { googleClient } from "../config/google.config.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import { USER_ROLES } from "../constants/role.constants.js";
+import { cookieOptions } from "../utils/cookie.utilis.js";
 const register = asyncHandler(async (req, res) => {
 
     const { username, email, password, expertise } = req.body;
@@ -39,12 +40,11 @@ const register = asyncHandler(async (req, res) => {
         refreshToken
     } = await generateAuthTokens(newUser, req);
 
-    res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "Strict",
-        maxAge: 7 * 24 * 60 * 60 * 1000
-    });
+   res.cookie(
+    "refreshToken",
+    refreshToken,
+    cookieOptions
+);
 
     res.status(201).json({
         message: "User registered successfully",
@@ -79,23 +79,36 @@ const login = asyncHandler(async (req, res) => {
         refreshToken
     } = await generateAuthTokens(user, req);
 
-    res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "Strict",
-        maxAge: 7 * 24 * 60 * 60 * 1000
-    });
-    res.status(200).json({
-        message: "Login successful",
+  res.cookie(
+    "refreshToken",
+    refreshToken,
+    cookieOptions
+);
+   return res.status(200).json({
+    success: true,
+    message: "Login successful",
+
+    data: {
+
         accessToken,
+
         user: {
+
+            id: user._id,
+
             username: user.username,
+
             email: user.email,
+
             role: user.role,
+
             expertise: user.expertise,
-            
+
         }
-    });
+
+    }
+
+});
 
 });
 
@@ -142,12 +155,11 @@ const googleLogin = asyncHandler(async (req, res) => {
         refreshToken
     } = await generateAuthTokens(user, req);
 
-    res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "Strict",
-        maxAge: 7 * 24 * 60 * 60 * 1000
-    });
+    res.cookie(
+    "refreshToken",
+    refreshToken,
+    cookieOptions
+);
 
     res.status(200).json({
         message: "Google login successful",
@@ -201,79 +213,140 @@ const updateProfile = asyncHandler(async (req, res) => {
 
 const refreshToken = asyncHandler(async (req, res) => {
 
-    const token = req.cookies.refreshToken;
+    const refreshToken = req.cookies.refreshToken;
 
-    if (!token) {
-        return res.status(401).json({ message: "Unauthorized: No refresh token provided" });
+    if (!refreshToken) {
+        return res.status(401).json({
+            success: false,
+            message: "Refresh token not found",
+        });
     }
 
-    const decoded = jwt.verify(token, config.JWT_SECRET);
+    let decoded;
+
+    try {
+
+        decoded = jwt.verify(
+            refreshToken,
+            process.env.JWT_SECRET
+        );
+
+    } catch (error) {
+
+res.clearCookie(
+    "refreshToken",
+    cookieOptions
+);
+        return res.status(401).json({
+            success: false,
+            message: "Refresh token expired or invalid",
+        });
+
+    }
+
     const user = await userModel.findById(decoded.userId);
 
     if (!user) {
+
+        res.clearCookie("refreshToken");
+
         return res.status(401).json({
-            message: "User not found"
+            success: false,
+            message: "User not found",
         });
+
     }
 
     const session = await sessionModel.findOne({
         user: user._id,
-        revoked: false
+        revoked: false,
     });
 
     if (!session) {
-        return res.status(401).json({ message: "Session not found" });
-    }
 
-    const isMatch = await bcrypt.compare(token, session.refreshToken);
-
-    if (!isMatch) {
+res.clearCookie(
+    "refreshToken",
+    cookieOptions
+);
         return res.status(401).json({
-            message: "Invalid refresh token"
+            success: false,
+            message: "Session expired",
         });
+
     }
+
+    const validRefreshToken = await bcrypt.compare(
+        refreshToken,
+        session.refreshToken
+    );
+
+    if (!validRefreshToken) {
+
+        res.clearCookie("refreshToken");
+
+        return res.status(401).json({
+            success: false,
+            message: "Invalid refresh token",
+        });
+
+    }
+
+    // Generate new access token
 
     const accessToken = jwt.sign(
         {
             userId: user._id,
             username: user.username,
             email: user.email,
-            role: user.role
-
+            role: user.role,
         },
         process.env.JWT_SECRET,
-        { expiresIn: '15m' }
+        {
+            expiresIn: "15m",
+        }
     );
 
-    const newrefreshToken = jwt.sign(
+    // Rotate refresh token
+
+    const newRefreshToken = jwt.sign(
         {
             userId: user._id,
             username: user.username,
             email: user.email,
-            role: user.role
+            role: user.role,
         },
-
         process.env.JWT_SECRET,
-        { expiresIn: '7d' }
+        {
+            expiresIn: "7d",
+        }
     );
 
-    const newRefreshTokenHash = await bcrypt.hash(newrefreshToken, 10);
-    session.refreshToken = newRefreshTokenHash;
+    session.refreshToken = await bcrypt.hash(
+        newRefreshToken,
+        10
+    );
+
     await session.save();
 
-    res.cookie("refreshToken", newrefreshToken, {
+    res.cookie("refreshToken", newRefreshToken, {
         httpOnly: true,
-        secure: true,
-        sameSite: "Strict",
-        maxAge: 7 * 24 * 60 * 60 * 1000
+        secure: process.env.NODE_ENV === "production",
+        sameSite:
+            process.env.NODE_ENV === "production"
+                ? "none"
+                : "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    res.status(200).json({
-        message: "Token refreshed successfully",
-        accessToken
+    return res.status(200).json({
+        success: true,
+        message: "Access token refreshed successfully",
+        accessToken,
     });
 
 });
+
+
 
 const logout = asyncHandler(async (req, res) => {
 

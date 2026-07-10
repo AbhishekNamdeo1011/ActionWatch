@@ -117,6 +117,10 @@ export const getDashboardData = async () => {
     "createdBy",
     "username"
 )
+.populate(
+    "service",
+    "name"
+)
 .sort({
     createdAt: -1
 })

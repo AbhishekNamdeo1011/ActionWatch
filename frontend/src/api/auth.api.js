@@ -38,7 +38,7 @@ Session
 
 export const refreshAccessToken = async () => {
 
-    const { data } = await api.post("/auth/refresh");
+    const { data } = await api.post("/auth/refresh-token");
 
     return data;
 

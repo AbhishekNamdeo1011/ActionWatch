@@ -16,50 +16,61 @@ const AuthInitializer = ({ children }) => {
 
     } = useAuth();
 
-   useEffect(() => {
+    useEffect(() => {
 
-    let cancelled = false;
+        let mounted = true;
 
-    const initialize = async () => {
+        const initialize = async () => {
 
-        try {
+            try {
 
-            const refreshResponse = await refreshAccessToken();
+                const refreshResponse = await refreshAccessToken();
 
-            if (cancelled) return;
+                if (!mounted) return;
 
-            const meResponse = await getCurrentUser();
+                const meResponse = await getCurrentUser();
 
-            if (cancelled) return;
+                if (!mounted) return;
 
-            login({
-                accessToken: refreshResponse.accessToken,
-                user: meResponse.user,
-            });
+                login({
 
-        } catch {
+                    accessToken: refreshResponse.accessToken,
 
-            if (!cancelled) {
+                    user: meResponse.user,
+
+                });
+
+            }
+
+            catch {
+
+                if (!mounted) return;
+
                 logout();
+
             }
 
-        } finally {
+            finally {
 
-            if (!cancelled) {
-                setLoading(false);
+                if (mounted) {
+
+                    setLoading(false);
+
+                }
+
             }
 
-        }
+        };
 
-    };
+        initialize();
 
-    initialize();
+        return () => {
 
-    return () => {
-        cancelled = true;
-    };
+            mounted = false;
 
-}, [login, logout, setLoading]);
+        };
+
+    }, [login, logout, setLoading]);
 
     return children;
 

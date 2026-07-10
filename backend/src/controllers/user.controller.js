@@ -1,5 +1,5 @@
 import asyncHandler from "../utils/asyncHandler.js";
-
+import userModel from "../models/user.model.js";
 import {
 
     updateUserRoleService,
@@ -41,3 +41,18 @@ export const updateUserRole = asyncHandler(
     }
 
 );
+export const getUsers = asyncHandler(async (req, res) => {
+
+    const users = await userModel.find()
+
+        .select("username email role expertise");
+
+    return res.status(200).json({
+
+        success: true,
+
+        data: users,
+
+    });
+
+});

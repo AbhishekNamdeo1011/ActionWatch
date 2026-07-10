@@ -8,12 +8,60 @@ import { USER_ROLES } from "../constants/role.constants.js";
 const router = Router();
 
 
-router.post('/register', validateRegistration, registerLimiter, register);
-router.post('/login', validateLogin, loginLimiter, login);
-router.get('/me', authMiddleware, authorize(USER_ROLES.VIEWER, USER_ROLES.RESPONDER, USER_ROLES.ADMIN, USER_ROLES.OWNER), getMe);
-router.put('/profile', authMiddleware, authorize(USER_ROLES.VIEWER, USER_ROLES.RESPONDER, USER_ROLES.ADMIN, USER_ROLES.OWNER), validateUpdateProfile, updateProfile);
-router.get('/refresh-token', refreshToken);
-router.get('/logout', authMiddleware, authorize(USER_ROLES.VIEWER, USER_ROLES.RESPONDER, USER_ROLES.ADMIN, USER_ROLES.OWNER), logout);
-router.get('/logout-all', authMiddleware, authorize(USER_ROLES.VIEWER, USER_ROLES.RESPONDER, USER_ROLES.ADMIN, USER_ROLES.OWNER), logoutAll);
-router.post('/google-login', googleLogin);
+router.post("/register", validateRegistration, registerLimiter, register);
+
+router.post("/login", validateLogin, loginLimiter, login);
+
+router.post("/refresh-token", refreshToken);
+
+router.post(
+    "/logout",
+    authMiddleware,
+    authorize(
+        USER_ROLES.VIEWER,
+        USER_ROLES.RESPONDER,
+        USER_ROLES.ADMIN,
+        USER_ROLES.OWNER
+    ),
+    logout
+);
+
+router.post(
+    "/logout-all",
+    authMiddleware,
+    authorize(
+        USER_ROLES.VIEWER,
+        USER_ROLES.RESPONDER,
+        USER_ROLES.ADMIN,
+        USER_ROLES.OWNER
+    ),
+    logoutAll
+);
+
+router.get(
+    "/me",
+    authMiddleware,
+    authorize(
+        USER_ROLES.VIEWER,
+        USER_ROLES.RESPONDER,
+        USER_ROLES.ADMIN,
+        USER_ROLES.OWNER
+    ),
+    getMe
+);
+
+router.put(
+    "/profile",
+    authMiddleware,
+    authorize(
+        USER_ROLES.VIEWER,
+        USER_ROLES.RESPONDER,
+        USER_ROLES.ADMIN,
+        USER_ROLES.OWNER
+    ),
+    validateUpdateProfile,
+    updateProfile
+);
+
+router.post("/google-login", googleLogin);
 export default router;

@@ -62,6 +62,21 @@ api.interceptors.response.use(
 
         const originalRequest = error.config;
 
+        if (!originalRequest) {
+
+            return Promise.reject(error);
+
+        }
+
+        // Don't try to refresh if refresh endpoint itself failed
+        if (originalRequest.url?.includes("/auth/refresh-token")) {
+
+            clearToken();
+
+            return Promise.reject(error);
+
+        }
+
         if (
 
             error.response?.status !== 401 ||
@@ -104,7 +119,7 @@ api.interceptors.response.use(
 
             const { data } = await axios.post(
 
-                `${import.meta.env.VITE_API_URL}/auth/refresh`,
+                `${import.meta.env.VITE_API_URL}/auth/refresh-token`,
 
                 {},
 
@@ -120,9 +135,7 @@ api.interceptors.response.use(
 
             processQueue(null, data.accessToken);
 
-            originalRequest.headers.Authorization =
-
-                `Bearer ${data.accessToken}`;
+            originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
 
             return api(originalRequest);
 

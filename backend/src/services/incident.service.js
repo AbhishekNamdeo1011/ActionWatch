@@ -208,10 +208,16 @@ export const getIncidentByIdService = async (incidentId) => {
 
         .findById(incidentId)
 
+       .populate(
+            "assignedTo",
+            "username email role"
+        )
+
         .populate(
             "createdBy",
-            "username role"
-        )
+            "username email"
+        );
+
 
 
 
