@@ -5,16 +5,33 @@ import {
     Clock,
     Plus,
 } from "lucide-react";
-
+import { useState } from "react";
+import { lazy, Suspense } from "react";
+import ComponentLoader from "@/components/common/ComponentLoader";
+const CreateIncidentModal = lazy(() =>
+    import("@/components/incidents/CreateIncidentModal")
+);
 import PageHeader from "@/components/common/PageHeader";
 import StatsCard from "@/components/dashboard/StatsCard";
 import RecentIncidents from "@/components/dashboard/RecentIncidents";
 import ServiceHealth from "@/components/dashboard/ServiceHealth";
 import ActiveIncidents from "@/components/dashboard/ActiveIncidents";
 import { useDashboard } from "@/hooks/useDashboard";
-
+import { useQueryClient } from "@tanstack/react-query";
+import useSocket from "@/hooks/useSocket";
 const Dashboard = () => {
+const [open, setOpen] = useState(false);
+   const queryClient = useQueryClient();
 
+    useSocket("incident:created", () => {
+
+        queryClient.invalidateQueries({
+
+            queryKey: ["dashboard"],
+
+        });
+
+    });
     const {
 
         data,
@@ -24,6 +41,7 @@ const Dashboard = () => {
         error,
 
     } = useDashboard();
+
 
     if (isLoading) {
 
@@ -37,6 +55,7 @@ const Dashboard = () => {
 
     }
 
+
     return (
 
         <>
@@ -48,14 +67,13 @@ const Dashboard = () => {
                 description="Monitor incidents, services and infrastructure."
 
                 action={
-
-                    <button className="flex h-11 items-center gap-2 rounded-xl bg-primary px-5 font-medium text-white transition hover:bg-primary-hover">
-
-                        <Plus size={18} />
-
-                        New Incident
-
-                    </button>
+<button
+    onClick={() => setOpen(true)}
+    className="flex h-11 items-center gap-2 rounded-xl bg-primary px-5 font-medium text-white transition hover:bg-primary-hover"
+>
+    <Plus size={18} />
+    New Incident
+</button>
 
                 }
 
@@ -140,7 +158,17 @@ const Dashboard = () => {
                 />
 
             </div>
+<Suspense fallback={<ComponentLoader />}>
 
+    <CreateIncidentModal
+
+        open={open}
+
+        onClose={() => setOpen(false)}
+
+    />
+
+</Suspense>
         </>
 
     );

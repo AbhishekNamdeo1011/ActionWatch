@@ -1,30 +1,23 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-
 import { toast } from "sonner";
 
-import { incidentService } from "@/services/incident.service";
+import { serviceService } from "@/services/service.service";
 
-export const useCreateIncident = () => {
+export const useToggleMonitoring = () => {
 
     const queryClient = useQueryClient();
 
     return useMutation({
 
-        mutationFn: incidentService.create,
+        mutationFn: serviceService.toggle,
 
         onSuccess: () => {
 
-            toast.success("Incident created.");
+            toast.success("Monitoring updated.");
 
             queryClient.invalidateQueries({
 
-                queryKey: ["dashboard"],
-
-            });
-
-            queryClient.invalidateQueries({
-
-                queryKey: ["incidents"],
+                queryKey: ["services"],
 
             });
 
@@ -33,11 +26,8 @@ export const useCreateIncident = () => {
         onError: (error) => {
 
             toast.error(
-
                 error.response?.data?.message ||
-
-                "Unable to create incident."
-
+                "Failed to update monitoring."
             );
 
         },

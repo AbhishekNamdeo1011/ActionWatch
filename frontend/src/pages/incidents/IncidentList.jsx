@@ -1,18 +1,37 @@
+import { lazy, Suspense, useState } from "react";
 import { Plus } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import PageHeader from "@/components/common/PageHeader";
 import IncidentFilters from "@/components/incidents/IncidentFilters";
 import IncidentTable from "@/components/incidents/IncidentTable";
+import ComponentLoader from "@/components/common/ComponentLoader";
 
 import { useIncidents } from "@/hooks/useIncidents";
+import useSocket from "@/hooks/useSocket";
+
+const CreateIncidentModal = lazy(() =>
+    import("@/components/incidents/CreateIncidentModal")
+);
+
 const Incidents = () => {
+
+    const [open, setOpen] = useState(false);
+
+    const queryClient = useQueryClient();
+
+    useSocket("incident:updated", () => {
+
+        queryClient.invalidateQueries({
+            queryKey: ["incidents"],
+        });
+
+    });
 
     const {
 
         data,
-
         isLoading,
-
         error,
 
     } = useIncidents();
@@ -41,7 +60,10 @@ const Incidents = () => {
 
                 action={
 
-                    <button className="flex h-11 items-center gap-2 rounded-xl bg-primary px-5 font-medium text-white">
+                    <button
+                        onClick={() => setOpen(true)}
+                        className="flex h-11 items-center gap-2 rounded-xl bg-primary px-5 font-medium text-white"
+                    >
 
                         <Plus size={18} />
 
@@ -57,13 +79,21 @@ const Incidents = () => {
 
             <div className="mt-6">
 
-                <IncidentTable
+                <IncidentTable incidents={data} />
 
-                    incidents={data}
+            </div>
+
+            <Suspense fallback={<ComponentLoader />}>
+
+                <CreateIncidentModal
+
+                    open={open}
+
+                    onClose={() => setOpen(false)}
 
                 />
 
-            </div>
+            </Suspense>
 
         </>
 

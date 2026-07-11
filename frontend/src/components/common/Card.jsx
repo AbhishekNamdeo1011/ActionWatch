@@ -8,8 +8,9 @@ const Card = ({
 
     return (
 
-<section className={`w-full rounded-2xl border border-border bg-surface shadow-card ${className}`}>
-            {(title || action) && (
+<section
+    className={`w-full overflow-hidden rounded-2xl border border-border bg-surface shadow-card ${className}`}
+>            {(title || action) && (
 
                 <div className="flex items-center justify-between border-b border-border px-6 py-5">
 

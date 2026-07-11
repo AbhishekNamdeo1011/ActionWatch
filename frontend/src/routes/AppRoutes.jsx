@@ -1,57 +1,80 @@
+import { lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 
 // Route Guards
 import ProtectedRoute from "./ProtectedRoute";
 import PublicRoute from "./PublicRoute";
 import RoleRoute from "./RoleRoute";
+import LazyRoute from "./LazyRoute";
 
 // Layouts
 import AuthLayout from "../layouts/AuthLayouts";
 import DashboardLayout from "../layouts/DashboardLayout";
 
-// Auth Pages
-import Login from "../pages/auth/Login";
-import Register from "../pages/auth/Register";
+/*
+==========================================
+Lazy Loaded Pages
+==========================================
+*/
 
-// Dashboard
-import Dashboard from "../pages/dashboard/Dashboard";
+const Login = lazy(() => import("../pages/auth/Login"));
+const Register = lazy(() => import("../pages/auth/Register"));
 
-// Incidents
-import IncidentList from "../pages/incidents/IncidentList";
-import WarRoom from "../pages/incidents/WarRoom";
-import IncidentDetails from "@/pages/incidents/IncidentDetails";
+const Dashboard = lazy(() => import("../pages/dashboard/Dashboard"));
 
-// Monitoring
-import Monitoring from "../pages/monitoring/Monitoring";
-import ServiceDetails from "../pages/monitoring/ServiceDetails";
+const IncidentList = lazy(() =>
+    import("../pages/incidents/IncidentList")
+);
 
-// Analytics
-import Analytics from "../pages/analytics/Analytics";
+const IncidentDetails = lazy(() =>
+    import("../pages/incidents/IncidentDetails")
+);
 
-// Investigation
-import Investigation from "../pages/investigation/Investigation";
+const Services = lazy(() =>
+    import("../pages/services/Services")
+);
 
-// Notifications
-import Notifications from "../pages/notifications/Notifications";
+const ServiceDetails = lazy(() =>
+    import("../pages/services/ServiceDetails")
+);
 
-// Users
-import UserManagement from "../pages/users/UserManagement";
+const Analytics = lazy(() =>
+    import("../pages/analytics/Analytics")
+);
 
-// Settings
-import Settings from "../pages/settings/Settings";
+const Investigation = lazy(() =>
+    import("../pages/investigation/Investigation")
+);
 
-// Profile
-import Profile from "../pages/profile/Profile";
+const Notifications = lazy(() =>
+    import("../pages/notifications/Notifications")
+);
 
-// Error Pages
-import NotFound from "../pages/errors/NotFound";
-import Forbidden from "../pages/errors/Forbidden";
+const Profile = lazy(() =>
+    import("../pages/profile/Profile")
+);
+
+const UserManagement = lazy(() =>
+    import("../pages/users/UserManagement")
+);
+
+const Settings = lazy(() =>
+    import("../pages/settings/Settings")
+);
+
+const NotFound = lazy(() =>
+    import("../pages/errors/NotFound")
+);
+
+const Forbidden = lazy(() =>
+    import("../pages/errors/Forbidden")
+);
 
 const AppRoutes = () => {
     return (
         <Routes>
 
-            {/* Redirect Root */}
+            {/* Redirect */}
 
             <Route
                 path="/"
@@ -62,23 +85,31 @@ const AppRoutes = () => {
                 Public Routes
             ========================== */}
 
-          <Route element={<PublicRoute />}>
+            <Route element={<PublicRoute />}>
 
-    <Route element={<AuthLayout />}>
+                <Route element={<AuthLayout />}>
 
-        <Route
-            path="/login"
-            element={<Login />}
-        />
+                    <Route
+                        path="/login"
+                        element={
+                            <LazyRoute>
+                                <Login />
+                            </LazyRoute>
+                        }
+                    />
 
-        <Route
-            path="/register"
-            element={<Register />}
-        />
+                    <Route
+                        path="/register"
+                        element={
+                            <LazyRoute>
+                                <Register />
+                            </LazyRoute>
+                        }
+                    />
 
-    </Route>
+                </Route>
 
-</Route>
+            </Route>
 
             {/* ==========================
                 Protected Routes
@@ -86,130 +117,137 @@ const AppRoutes = () => {
 
             <Route element={<ProtectedRoute />}>
 
-    <Route element={<DashboardLayout />}>
+                <Route element={<DashboardLayout />}>
 
-        <Route
+                    <Route
+                        path="/dashboard"
+                        element={
+                            <LazyRoute>
+                                <Dashboard />
+                            </LazyRoute>
+                        }
+                    />
 
-            path="/dashboard"
+                    <Route
+                        path="/incidents"
+                        element={
+                            <LazyRoute>
+                                <IncidentList />
+                            </LazyRoute>
+                        }
+                    />
 
-            element={<Dashboard />}
+                    <Route
+                        path="/incidents/:incidentId"
+                        element={
+                            <LazyRoute>
+                                <IncidentDetails />
+                            </LazyRoute>
+                        }
+                    />
 
-        />
+                    <Route
+                        path="/services"
+                        element={
+                            <LazyRoute>
+                                <Services />
+                            </LazyRoute>
+                        }
+                    />
 
-        <Route
+                    <Route
+                        path="/services/:serviceId"
+                        element={
+                            <LazyRoute>
+                                <ServiceDetails />
+                            </LazyRoute>
+                        }
+                    />
 
-            path="/incidents"
+                    <Route
+                        path="/analytics"
+                        element={
+                            <LazyRoute>
+                                <Analytics />
+                            </LazyRoute>
+                        }
+                    />
 
-            element={<IncidentList />}
+                    <Route
+                        path="/investigation"
+                        element={
+                            <LazyRoute>
+                                <Investigation />
+                            </LazyRoute>
+                        }
+                    />
 
-        />
-<Route
-    path="/incidents/:incidentId"
-    element={<IncidentDetails />}
-/>
-        {/* <Route
+                    <Route
+                        path="/notifications"
+                        element={
+                            <LazyRoute>
+                                <Notifications />
+                            </LazyRoute>
+                        }
+                    />
 
-            path="/incidents/:incidentId"
+                    <Route
+                        path="/profile"
+                        element={
+                            <LazyRoute>
+                                <Profile />
+                            </LazyRoute>
+                        }
+                    />
 
-            element={<WarRoom />}
+                    <Route
+                        path="/users"
+                        element={
+                            <LazyRoute>
+                                <RoleRoute roles={["admin", "owner"]}>
+                                    <UserManagement />
+                                </RoleRoute>
+                            </LazyRoute>
+                        }
+                    />
 
-        /> */}
+                    <Route
+                        path="/settings"
+                        element={
+                            <LazyRoute>
+                                <RoleRoute roles={["admin", "owner"]}>
+                                    <Settings />
+                                </RoleRoute>
+                            </LazyRoute>
+                        }
+                    />
 
-        <Route
+                </Route>
 
-            path="/monitoring"
+            </Route>
 
-            element={<Monitoring />}
-
-        />
-
-        <Route
-
-            path="/monitoring/:serviceId"
-
-            element={<ServiceDetails />}
-
-        />
-
-        <Route
-
-            path="/analytics"
-
-            element={<Analytics />}
-
-        />
-
-        <Route
-
-            path="/investigation"
-
-            element={<Investigation />}
-
-        />
-
-        <Route
-
-            path="/notifications"
-
-            element={<Notifications />}
-
-        />
-
-        <Route
-
-            path="/profile"
-
-            element={<Profile />}
-
-        />
-
-        <Route
-
-            path="/users"
-
-            element={
-
-                <RoleRoute roles={["admin","owner"]}>
-
-                    <UserManagement/>
-
-                </RoleRoute>
-
-            }
-
-        />
-
-        <Route
-
-            path="/settings"
-
-            element={
-
-                <RoleRoute roles={["admin","owner"]}>
-
-                    <Settings/>
-
-                </RoleRoute>
-
-            }
-
-        />
-
-    </Route>
-
-</Route>
-
-            {/* Error Routes */}
+            {/* ==========================
+                Error Pages
+            ========================== */}
 
             <Route
                 path="/403"
-                element={<Forbidden />}
+                element={
+                    <LazyRoute>
+                        <Forbidden />
+                    </LazyRoute>
+                }
             />
 
             <Route
                 path="*"
-                element={<NotFound />}
+                element={
+                    <LazyRoute>
+                        <NotFound />
+                    </LazyRoute>
+                }
             />
+
         </Routes>
     );
 };

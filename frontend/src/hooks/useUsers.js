@@ -8,7 +8,7 @@ export const useUsers = () => {
 
         queryKey: ["users"],
 
-        queryFn: userService.getAll,
+        queryFn: userService.getUsers,
 
     });
 

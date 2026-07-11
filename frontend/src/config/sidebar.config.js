@@ -25,7 +25,7 @@ export const sidebarItems = [
   },
   {
     title: "Services",
-    path: "/monitoring",
+    path: "/services",
     icon: Server,
     roles: ["owner", "admin", "responder", "viewer"],
   },

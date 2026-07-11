@@ -18,7 +18,7 @@ import {
     notFound,
 } from "./middleware/error.middleware.js";
 
-
+ 
 const app = express();
 
 app.use(helmet());
