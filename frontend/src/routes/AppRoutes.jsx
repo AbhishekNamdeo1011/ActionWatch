@@ -29,7 +29,9 @@ const IncidentList = lazy(() =>
 const IncidentDetails = lazy(() =>
     import("../pages/incidents/IncidentDetails")
 );
-
+const WarRoom = lazy(() =>
+    import("@/pages/war-room/WarRoom")
+);
 const Services = lazy(() =>
     import("../pages/services/Services")
 );
@@ -145,7 +147,14 @@ const AppRoutes = () => {
                             </LazyRoute>
                         }
                     />
-
+<Route
+    path="/war-room/:incidentId"
+    element={
+        <LazyRoute>
+            <WarRoom />
+        </LazyRoute>
+    }
+/>
                     <Route
                         path="/services"
                         element={

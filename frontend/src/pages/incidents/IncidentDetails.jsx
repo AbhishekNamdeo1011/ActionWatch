@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-
+import { useNavigate } from "react-router-dom";
 import Card from "@/components/common/Card";
 import IncidentInfoCard from "@/components/incidents/IncidentInfoCard";
 import { useIncident } from "@/hooks/useIncident";
@@ -15,6 +15,7 @@ const EditIncidentModal = lazy(
 const IncidentDetails = () => {
   const { incidentId } = useParams();
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
   const { data, isLoading, error } = useIncident(incidentId);
 const incident = data;
 const {
@@ -47,20 +48,54 @@ const {
       {/* ================= Header ================= */}
 
       <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">{incident.title}</h1>
 
-          <p className="mt-2 text-muted">Incident Details</p>
-        </div>
+    <div>
+
+        <h1 className="text-3xl font-bold">
+
+            {incident.title}
+
+        </h1>
+
+        <p className="mt-2 text-muted">
+
+            Incident Details
+
+        </p>
+
+    </div>
+
+    <div className="flex gap-3">
 
         <button
-          className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-white"
-          onClick={() => setOpen(true)}
+
+            onClick={() => navigate(`/war-room/${incident._id}`)}
+
+            className="rounded-xl bg-red-600 px-5 py-2 font-medium text-white transition hover:bg-red-700"
+
         >
-          <Pencil size={18} />
-          Edit
+
+            Open War Room
+
         </button>
-      </div>
+
+        <button
+
+            onClick={() => setOpen(true)}
+
+            className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-white"
+
+        >
+
+            <Pencil size={18} />
+
+            Edit
+
+        </button>
+
+    </div>
+
+</div>
 
       {/* ================= Overview ================= */}
 

@@ -16,21 +16,33 @@ export const useUpdateIncident = () => {
 
         onSuccess: (_, variables) => {
 
-            toast.success("Incident updated successfully.");
+    toast.success("Incident updated successfully.");
 
-            queryClient.invalidateQueries({
+    queryClient.invalidateQueries({
 
-                queryKey: ["incident", variables.id],
+        queryKey: ["incident", variables.id],
 
-            });
+    });
 
-            queryClient.invalidateQueries({
+    queryClient.invalidateQueries({
 
-                queryKey: ["incidents"],
+        queryKey: ["incidents"],
 
-            });
+    });
 
-        },
+    queryClient.invalidateQueries({
+
+        queryKey: ["timeline", variables.id],
+
+    });
+
+    queryClient.invalidateQueries({
+
+        queryKey: ["dashboard"],
+
+    });
+
+},
 
         onError: (error) => {
 
