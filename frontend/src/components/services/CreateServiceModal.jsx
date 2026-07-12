@@ -1,6 +1,6 @@
 import Card from "@/components/common/Card";
 import ServiceForm from "./ServiceForm";
-import { useCreateService } from "@/hooks/useCreateService";
+import { useCreateService } from "@/hooks/services/useCreateService";
 
 const CreateServiceModal = ({
     open,

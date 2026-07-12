@@ -1,6 +1,6 @@
 import { ChevronDown } from "lucide-react";
 
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth/useAuth";
 
 const ProfileDropdown = () => {
 

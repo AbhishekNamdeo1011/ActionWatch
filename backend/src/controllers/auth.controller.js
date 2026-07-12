@@ -338,11 +338,33 @@ res.clearCookie(
         maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    return res.status(200).json({
-        success: true,
-        message: "Access token refreshed successfully",
+   return res.status(200).json({
+
+    success: true,
+
+    message: "Access token refreshed successfully",
+
+    data: {
+
         accessToken,
-    });
+
+        user: {
+
+            id: user._id,
+
+            username: user.username,
+
+            email: user.email,
+
+            role: user.role,
+
+            expertise: user.expertise,
+
+        }
+
+    }
+
+});
 
 });
 

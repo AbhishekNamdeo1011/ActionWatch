@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 
-import { refreshAccessToken, getCurrentUser } from "@/api/auth.api";
+import { refreshAccessToken } from "@/api/auth.api";
 
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth/useAuth";
 
 const AuthInitializer = ({ children }) => {
 
@@ -16,61 +16,53 @@ const AuthInitializer = ({ children }) => {
 
     } = useAuth();
 
-    useEffect(() => {
+   useEffect(() => {
 
-        let mounted = true;
+    let mounted = true;
 
-        const initialize = async () => {
+    const initialize = async () => {
 
-            try {
+        try {
 
-                const refreshResponse = await refreshAccessToken();
+            const response = await refreshAccessToken();
 
-                if (!mounted) return;
+            if (!mounted) return;
 
-                const meResponse = await getCurrentUser();
+            login({
 
-                if (!mounted) return;
+                accessToken: response.data.accessToken,
 
-                login({
+                user: response.data.user,
 
-                    accessToken: refreshResponse.accessToken,
+            });
 
-                    user: meResponse.user,
+        } catch {
 
-                });
+            if (!mounted) return;
 
-            }
+            logout();
 
-            catch {
+        } finally {
 
-                if (!mounted) return;
+            if (mounted) {
 
-                logout();
-
-            }
-
-            finally {
-
-                if (mounted) {
-
-                    setLoading(false);
-
-                }
+                setLoading(false);
 
             }
 
-        };
+        }
 
-        initialize();
+    };
 
-        return () => {
+    initialize();
 
-            mounted = false;
+    return () => {
 
-        };
+        mounted = false;
 
-    }, [login, logout, setLoading]);
+    };
+
+}, [login, logout, setLoading]);
 
     return children;
 

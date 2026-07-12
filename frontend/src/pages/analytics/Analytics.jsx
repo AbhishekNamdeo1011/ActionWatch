@@ -1,30 +1,14 @@
-import { lazy, Suspense } from "react";
-
 import PageHeader from "@/components/common/PageHeader";
-import ComponentLoader from "@/components/common/ComponentLoader";
 
-import { useAnalytics } from "@/hooks/useAnalytics";
+import AnalyticsOverview from "@/components/analytics/AnalyticsOverview";
+import SeverityChart from "@/components/analytics/SeverityChart";
+import StatusChart from "@/components/analytics/StatusChart";
+import MonthlyIncidentChart from "@/components/analytics/MonthlyIncidentsChart";
+import ServiceHealthChart from "@/components/analytics/ServiceHealthChart";
 
-const SeverityChart = lazy(() =>
-    import("@/components/analytics/SeverityChart")
-);
-const AnalyticsOverview = lazy(() =>
-    import("@/components/analytics/AnalyticsOverview")
-);
+import AnalyticsSkeleton from "@/components/skeletons/AnalyticsSkeleton";
 
-
-
-const StatusChart = lazy(() =>
-    import("@/components/analytics/StatusChart")
-);
-
-const MonthlyIncidentChart = lazy(() =>
-    import("@/components/analytics/MonthlyIncidentsChart")
-);
-
-const ServiceHealthChart = lazy(() =>
-    import("@/components/analytics/ServiceHealthChart")
-);
+import { useAnalytics } from "@/hooks/responder/useAnalytics";
 
 const Analytics = () => {
 
@@ -40,16 +24,26 @@ const Analytics = () => {
 
     if (isLoading) {
 
-        return <ComponentLoader />;
+        return <AnalyticsSkeleton />;
 
     }
 
     if (error) {
+
         return (
-            <h2 className="text-red-500">
-                Failed to load analytics.
-            </h2>
+
+            <div className="flex h-60 items-center justify-center">
+
+                <h2 className="text-lg font-medium text-red-500">
+
+                    Failed to load analytics.
+
+                </h2>
+
+            </div>
+
         );
+
     }
 
     return (
@@ -64,65 +58,47 @@ const Analytics = () => {
 
             />
 
-            {/* ================= KPI Cards ================= */}
+            {/* KPI Cards */}
 
-            <Suspense fallback={<ComponentLoader />}>
+            <AnalyticsOverview
 
-    <AnalyticsOverview
-        data={data}
-    />
+                data={data}
 
-</Suspense>
+            />
 
-            {/* ================= Charts Row 1 ================= */}
+            {/* Charts Row 1 */}
 
             <div className="grid gap-6 xl:grid-cols-2">
 
-                <Suspense fallback={<ComponentLoader />}>
+                <SeverityChart
 
-                    <SeverityChart
+                    data={data.incidentsBySeverity}
 
-                        data={data.incidentsBySeverity}
+                />
 
-                    />
+                <StatusChart
 
-                </Suspense>
+                    data={data.incidentsByStatus}
 
-                <Suspense fallback={<ComponentLoader />}>
-
-                    <StatusChart
-
-                        data={data.incidentsByStatus}
-
-                    />
-
-                </Suspense>
+                />
 
             </div>
 
-            {/* ================= Charts Row 2 ================= */}
+            {/* Charts Row 2 */}
 
             <div className="grid gap-6 xl:grid-cols-2">
 
-                <Suspense fallback={<ComponentLoader />}>
+                <MonthlyIncidentChart
 
-                    <MonthlyIncidentChart
+                    data={data.monthlyIncidents}
 
-                        data={data.monthlyIncidents}
+                />
 
-                    />
+                <ServiceHealthChart
 
-                </Suspense>
+                    data={data.serviceHealth}
 
-                <Suspense fallback={<ComponentLoader />}>
-
-                    <ServiceHealthChart
-
-                        data={data.serviceHealth}
-
-                    />
-
-                </Suspense>
+                />
 
             </div>
 

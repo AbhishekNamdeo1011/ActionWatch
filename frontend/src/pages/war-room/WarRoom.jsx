@@ -3,16 +3,16 @@ import { useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth/useAuth";
 import useSocket from "@/hooks/useSocket";
 
-import { useIncident } from "@/hooks/useIncident";
+import { useIncident } from "@/hooks/incidents/useIncident";
 import { useTimeline } from "@/hooks/useTimeline";
-import { useSimilarIncidents } from "@/hooks/useSimilarIncidents";
-import { usePostmortem } from "@/hooks/usePostmortem";
+import { useSimilarIncidents } from "@/hooks/similarIncidents/useSimilarIncidents";
+import { usePostmortem } from "@/hooks/postmortem/usePostmortem";
 
-import { useGenerateRootCause } from "@/hooks/useGenerateRootCause";
-import { useGeneratePostmortem } from "@/hooks/useGeneratePostmortem";
+import { useGenerateRootCause } from "@/hooks/ai/useGenerateRootCause";
+import { useGeneratePostmortem } from "@/hooks/postmortem/useGeneratePostmortem";
 
 import AssignResponderModal from "@/components/responders/AssignResponderModal";
 import WarRoomSkeleton from "@/components/skeletons/WarRoomSkeleton";
@@ -235,58 +235,50 @@ const WarRoom = () => {
 
                 {/* Command Center */}
 
-                <div className="grid gap-6 xl:grid-cols-3">
+         <div className="space-y-6">
 
-                    {
+    {
 
-                        user?.role !== "viewer" && (
+        user?.role !== "viewer" && (
 
-                            <CommandCenterCard
+            <CommandCenterCard
 
-                                incident={incident}
+                incident={incident}
 
-                                onAssign={() => setAssignOpen(true)}
+                onAssign={() => setAssignOpen(true)}
 
-                                onGenerateAI={handleGenerateAI}
+                onGenerateAI={handleGenerateAI}
 
-                                onGeneratePostmortem={handleGeneratePostmortem}
+                onGeneratePostmortem={handleGeneratePostmortem}
 
-                                onRefresh={handleRefresh}
+                onRefresh={handleRefresh}
 
-                                generatingAI={generateRootCause.isPending}
+                generatingAI={generateRootCause.isPending}
 
-                                generatingPostmortem={generatePostmortem.isPending}
+                generatingPostmortem={generatePostmortem.isPending}
 
-                            />
+            />
 
-                        )
+        )
 
-                    }
+    }
 
-                    <div className="xl:col-span-2">
+    <TimelineCard
 
-                        <TimelineCard
+        timeline={timeline}
 
-                            timeline={timeline}
+        incidentId={incidentId}
 
-                            incidentId={incidentId}
+    />
 
-                        />
-
-                    </div>
-
-                </div>
+</div>
 
                 {/* Service + AI */}
 
-               <div className="grid gap-6 xl:grid-cols-3">
-
+    <div className="flex flex-col gap-6">
     <ServiceHealthCard incident={incident} />
-
     <AIAnalysisCard incident={incident} />
-
     <PostmortemCard postmortem={postmortem} />
-
 </div>
 
                 {/* Responders */}

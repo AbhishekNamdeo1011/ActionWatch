@@ -2,8 +2,8 @@ import { useParams } from "react-router-dom";
 
 import PageHeader from "@/components/common/PageHeader";
 import Card from "@/components/common/Card";
-
-import { useService } from "@/hooks/useService";
+import ServiceSkeleton from "@/components/skeletons/ServiceSkeleton";
+import { useService } from "@/hooks/services/useService";
 
 const ServiceDetails = () => {
 
@@ -21,10 +21,9 @@ const ServiceDetails = () => {
 
     if (isLoading) {
 
-        return <h2>Loading...</h2>;
+    return <ServiceSkeleton />;
 
-    }
-
+}
     if (error) {
 
         return <h2>Failed to load service.</h2>;

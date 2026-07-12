@@ -8,7 +8,7 @@ import Logo from "@/assets/logos/actionwatch-logo.svg";
 import RightBanner from "@/assets/logos/registerpage.svg";
 
 import { loginSchema } from "@/schemas/auth.schema";
-import { useLogin } from "@/hooks/useLogin";
+import { useLogin } from "@/hooks/auth/useLogin";
 
 const Login = () => {
 

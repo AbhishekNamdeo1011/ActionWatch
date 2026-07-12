@@ -1,3 +1,4 @@
+import { useState, lazy, Suspense } from "react";
 import {
     ShieldAlert,
     Server,
@@ -5,23 +6,30 @@ import {
     Clock,
     Plus,
 } from "lucide-react";
-import { useState } from "react";
-import { lazy, Suspense } from "react";
-import ComponentLoader from "@/components/common/ComponentLoader";
-const CreateIncidentModal = lazy(() =>
-    import("@/components/incidents/CreateIncidentModal")
-);
+
+import { useQueryClient } from "@tanstack/react-query";
+
 import PageHeader from "@/components/common/PageHeader";
+
+import DashboardSkeleton from "@/components/skeletons/DashboardSkeleton";
+
 import StatsCard from "@/components/dashboard/StatsCard";
 import RecentIncidents from "@/components/dashboard/RecentIncidents";
 import ServiceHealth from "@/components/dashboard/ServiceHealth";
 import ActiveIncidents from "@/components/dashboard/ActiveIncidents";
-import { useDashboard } from "@/hooks/useDashboard";
-import { useQueryClient } from "@tanstack/react-query";
+
+import { useDashboard } from "@/hooks/dashboard/useDashboard";
 import useSocket from "@/hooks/useSocket";
+
+const CreateIncidentModal = lazy(() =>
+    import("@/components/incidents/CreateIncidentModal")
+);
+
 const Dashboard = () => {
-const [open, setOpen] = useState(false);
-   const queryClient = useQueryClient();
+
+    const [open, setOpen] = useState(false);
+
+    const queryClient = useQueryClient();
 
     useSocket("incident:created", () => {
 
@@ -32,6 +40,7 @@ const [open, setOpen] = useState(false);
         });
 
     });
+
     const {
 
         data,
@@ -42,19 +51,29 @@ const [open, setOpen] = useState(false);
 
     } = useDashboard();
 
-
     if (isLoading) {
 
-        return <h2>Loading Dashboard...</h2>;
+        return <DashboardSkeleton />;
 
     }
 
     if (error) {
 
-        return <h2>Something went wrong.</h2>;
+        return (
+
+            <div className="flex h-60 items-center justify-center">
+
+                <h2 className="text-lg font-medium text-red-500">
+
+                    Failed to load dashboard.
+
+                </h2>
+
+            </div>
+
+        );
 
     }
-
 
     return (
 
@@ -67,17 +86,23 @@ const [open, setOpen] = useState(false);
                 description="Monitor incidents, services and infrastructure."
 
                 action={
-<button
-    onClick={() => setOpen(true)}
-    className="flex h-11 items-center gap-2 rounded-xl bg-primary px-5 font-medium text-white transition hover:bg-primary-hover"
->
-    <Plus size={18} />
-    New Incident
-</button>
+
+                    <button
+                        onClick={() => setOpen(true)}
+                        className="flex h-11 items-center gap-2 rounded-xl bg-primary px-5 font-medium text-white transition hover:bg-primary-hover"
+                    >
+
+                        <Plus size={18} />
+
+                        New Incident
+
+                    </button>
 
                 }
 
             />
+
+            {/* Stats */}
 
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
 
@@ -131,6 +156,8 @@ const [open, setOpen] = useState(false);
 
             </div>
 
+            {/* Row 2 */}
+
             <div className="mt-8 grid gap-6 lg:grid-cols-2">
 
                 <RecentIncidents
@@ -149,6 +176,8 @@ const [open, setOpen] = useState(false);
 
             </div>
 
+            {/* Active Incidents */}
+
             <div className="mt-6">
 
                 <ActiveIncidents
@@ -158,17 +187,29 @@ const [open, setOpen] = useState(false);
                 />
 
             </div>
-<Suspense fallback={<ComponentLoader />}>
 
-    <CreateIncidentModal
+            {/* Modal */}
 
-        open={open}
+            <Suspense fallback={null}>
 
-        onClose={() => setOpen(false)}
+                {
 
-    />
+                    open && (
 
-</Suspense>
+                        <CreateIncidentModal
+
+                            open={open}
+
+                            onClose={() => setOpen(false)}
+
+                        />
+
+                    )
+
+                }
+
+            </Suspense>
+
         </>
 
     );

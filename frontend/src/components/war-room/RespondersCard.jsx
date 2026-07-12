@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import Card from "@/components/common/Card";
-import { useRemoveResponder } from "@/hooks/useRemoveResponder";
-import { useAuth } from "@/hooks/useAuth";
+import { useRemoveResponder } from "@/hooks/responder/useRemoveResponder";
+import { useAuth } from "@/hooks/auth/useAuth";
 
 const RespondersCard = ({
     responders = [],

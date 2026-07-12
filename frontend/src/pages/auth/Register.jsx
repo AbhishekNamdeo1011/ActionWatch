@@ -3,7 +3,7 @@ import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRegister } from "@/hooks/useRegister";
+import { useRegister } from "@/hooks/auth/useRegister";
 import Logo from "@/assets/logos/actionwatch-logo.svg";
 import RightBanner from "@/assets/logos/registerpage.svg";
 

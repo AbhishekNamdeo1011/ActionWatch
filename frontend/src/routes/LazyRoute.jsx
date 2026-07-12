@@ -1,10 +1,12 @@
 import { Suspense } from "react";
 
-import PageLoader from "@/components/common/PageLoader";
-
 const LazyRoute = ({ children }) => {
     return (
-        <Suspense fallback={<PageLoader />}>
+        <Suspense
+            fallback={
+                <div className="min-h-[calc(100vh-80px)] bg-background" />
+            }
+        >
             {children}
         </Suspense>
     );

@@ -1,124 +1,116 @@
-import { lazy, Suspense, useState } from "react";
+import Card from "@/components/common/Card";
+import {
+    Users,
+    Shield,
+    UserCheck,
+    Eye,
+} from "lucide-react";
 
-import PageHeader from "@/components/common/PageHeader";
-import ComponentLoader from "@/components/common/ComponentLoader";
+const UserStats = ({ users = [] }) => {
 
-import { useUsers } from "@/hooks/useUsers";
+    const totalUsers = users.length;
 
-const UserStats = lazy(() =>
-    import("@/components/users/UserStats")
-);
+    const admins = users.filter(
+        (user) => user.role === "admin"
+    ).length;
 
-const UserFilters = lazy(() =>
-    import("@/components/users/UserFilters")
-);
+    const responders = users.filter(
+        (user) => user.role === "responder"
+    ).length;
 
-const UserTable = lazy(() =>
-    import("@/components/users/UserTable")
-);
+    const viewers = users.filter(
+        (user) => user.role === "viewer"
+    ).length;
 
-const UserManagement = () => {
+    const stats = [
 
-    const [filters, setFilters] = useState({
+        {
+            title: "Total Users",
+            value: totalUsers,
+            icon: Users,
+            color: "text-primary",
+        },
 
-        search: "",
+        {
+            title: "Admins",
+            value: admins,
+            icon: Shield,
+            color: "text-blue-500",
+        },
 
-        role: "",
+        {
+            title: "Responders",
+            value: responders,
+            icon: UserCheck,
+            color: "text-yellow-500",
+        },
 
-    });
+        {
+            title: "Viewers",
+            value: viewers,
+            icon: Eye,
+            color: "text-green-500",
+        },
 
-    const {
-
-        data: users = [],
-
-        isLoading,
-
-        error,
-
-    } = useUsers();
-
-    if (isLoading) {
-
-        return <ComponentLoader />;
-
-    }
-
-    if (error) {
-
-        return (
-
-            <div className="flex h-64 items-center justify-center">
-
-                <p className="text-red-500">
-
-                    Failed to load users.
-
-                </p>
-
-            </div>
-
-        );
-
-    }
+    ];
 
     return (
 
-        <>
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
 
-            <PageHeader
+            {
 
-                title="User Management"
+                stats.map((item) => {
 
-                description="Manage users and their roles."
+                    const Icon = item.icon;
 
-            />
+                    return (
 
-            <div className="mt-8">
+                        <Card
+                            key={item.title}
+                            className="p-6"
+                        >
 
-                <Suspense fallback={<ComponentLoader />}>
+                            <div className="flex items-center justify-between">
 
-                    <UserStats users={users} />
+                                <div>
 
-                </Suspense>
+                                    <p className="text-sm text-muted">
 
-            </div>
+                                        {item.title}
 
-            <div className="mt-6">
+                                    </p>
 
-                <Suspense fallback={<ComponentLoader />}>
+                                    <h2 className="mt-2 text-3xl font-bold">
 
-                    <UserFilters
+                                        {item.value}
 
-                        filters={filters}
+                                    </h2>
 
-                        setFilters={setFilters}
+                                </div>
 
-                    />
+                                <div
+                                    className={`rounded-xl bg-background p-3 ${item.color}`}
+                                >
 
-                </Suspense>
+                                    <Icon size={24} />
 
-            </div>
+                                </div>
 
-            <div className="mt-6">
+                            </div>
 
-                <Suspense fallback={<ComponentLoader />}>
+                        </Card>
 
-                    <UserTable
+                    );
 
-                        users={users}
+                })
 
-                        filters={filters}
+            }
 
-                    />
-
-                </Suspense>
-
-            </div>
-
-        </>
+        </div>
 
     );
 
 };
 
-export default UserManagement;
+export default UserStats;

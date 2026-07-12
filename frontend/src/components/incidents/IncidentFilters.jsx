@@ -1,5 +1,5 @@
 import { Search } from "lucide-react";
-import { useServices } from "@/hooks/useServices";
+import { useServices } from "@/hooks/services/useServices";
 
 const IncidentFilters = ({
     filters,

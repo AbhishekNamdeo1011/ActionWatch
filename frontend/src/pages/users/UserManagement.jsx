@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState } from "react";
 
 import PageHeader from "@/components/common/PageHeader";
-import UserSkeleton from "@/components/users/UserSkeleton";
+import UserSkeleton from "@/components/skeletons/UserSkeleton";
 
 import { useUsers } from "@/hooks/useUsers";
 
@@ -49,7 +49,7 @@ const UserManagement = () => {
 
             <div className="flex h-64 items-center justify-center">
 
-                <p className="text-red-500 text-lg">
+                <p className="text-red-500">
 
                     Failed to load users.
 
@@ -73,47 +73,33 @@ const UserManagement = () => {
 
             />
 
-            <div className="mt-8">
+            <Suspense fallback={<UserSkeleton />}>
 
-                <Suspense fallback={<UserSkeleton />}>
+                <div className="mt-8">
 
                     <UserStats users={users} />
 
-                </Suspense>
+                </div>
 
-            </div>
-
-            <div className="mt-6">
-
-                <Suspense fallback={<UserSkeleton />}>
+                <div className="mt-6">
 
                     <UserFilters
-
                         filters={filters}
-
                         setFilters={setFilters}
-
                     />
 
-                </Suspense>
+                </div>
 
-            </div>
-
-            <div className="mt-6">
-
-                <Suspense fallback={<UserSkeleton />}>
+                <div className="mt-6">
 
                     <UserTable
-
                         users={users}
-
                         filters={filters}
-
                     />
 
-                </Suspense>
+                </div>
 
-            </div>
+            </Suspense>
 
         </>
 
