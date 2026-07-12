@@ -34,8 +34,10 @@ export const generateRootCause = async (
     ==========================================
     */
 
-    const incident = await IncidentModel.findById(
-        incidentId
+    const incident = await IncidentModel.findById(incidentId)
+.populate(
+    "service",
+    "name currentStatus"
     );
 
     if (!incident) {

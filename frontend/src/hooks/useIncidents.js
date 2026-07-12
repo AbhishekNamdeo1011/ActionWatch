@@ -1,13 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { incidentService } from "@/services/incident.service";
 
-export const useIncidents = () => {
+export const useIncidents = (params = {}) => {
 
     return useQuery({
 
-        queryKey: ["incidents"],
+        queryKey: ["incidents", params],
 
-        queryFn: incidentService.getAll,
+        queryFn: () => incidentService.getAll(params),
 
     });
 

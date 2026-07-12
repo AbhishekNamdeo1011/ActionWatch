@@ -77,11 +77,7 @@ export const getServices = async (userId,
     if (isNaN(limit) || limit < 1) limit = 10;
     if (limit > 100) limit = 100;
 
-    const filter = {
-
-        createdBy: userId,
-
-    };
+    const filter = {};
 
     if (search) {
 
@@ -179,14 +175,7 @@ export const getServiceById = async (serviceId,
 
     }
 
-    const service =
-        await ServiceModel.findOne({
-
-            _id: serviceId,
-
-            createdBy: userId,
-
-        })
+  const service = await ServiceModel.findById(serviceId)
             .populate(
                 "createdBy",
                 "username role"
@@ -255,15 +244,13 @@ export const updateService = async (
 
     if (payload.url) {
 
-        const existingService = await ServiceModel.findOne({
+       const existingService = await ServiceModel.findOne({
 
-            createdBy: userId,
+    url: payload.url,
 
-            url: payload.url,
+    _id: { $ne: serviceId }
 
-            _id: { $ne: serviceId }
-
-        });
+});
 
         if (existingService) {
 
@@ -275,33 +262,27 @@ export const updateService = async (
 
     }
 
-    const service = await ServiceModel.findOneAndUpdate(
+   const service = await ServiceModel.findByIdAndUpdate(
 
-        {
+    serviceId,
 
-            _id: serviceId,
+    payload,
 
-            createdBy: userId,
+    {
 
-        },
+        new: true,
 
-        payload,
+        runValidators: true,
 
-        {
+    }
 
-            new: true,
+).populate(
 
-            runValidators: true,
+    "createdBy",
 
-        }
+    "username role"
 
-    ).populate(
-
-        "createdBy",
-
-        "username role"
-
-    );
+);
 
     if (!service) {
 
@@ -322,8 +303,7 @@ Delete Service
 */
 
 export const deleteService = async (
-    serviceId,
-    userId
+    serviceId
 ) => {
 
     if (!mongoose.Types.ObjectId.isValid(serviceId)) {
@@ -334,13 +314,7 @@ export const deleteService = async (
 
     }
 
-    const service = await ServiceModel.findOneAndDelete({
-
-        _id: serviceId,
-
-        createdBy: userId,
-
-    });
+    const service = await ServiceModel.findByIdAndDelete(serviceId);
 
     if (!service) {
 
@@ -373,13 +347,7 @@ export const toggleService = async (
 
     }
 
-    const service = await ServiceModel.findOne({
-
-        _id: serviceId,
-
-        createdBy: userId,
-
-    });
+   const service = await ServiceModel.findById(serviceId);
 
     if (!service) {
 

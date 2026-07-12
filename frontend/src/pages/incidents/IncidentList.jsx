@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState } from "react";
 import { Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-
+import { useAuth } from "@/hooks/useAuth";
 import PageHeader from "@/components/common/PageHeader";
 import IncidentFilters from "@/components/incidents/IncidentFilters";
 import IncidentTable from "@/components/incidents/IncidentTable";
@@ -10,12 +10,21 @@ import ComponentLoader from "@/components/common/ComponentLoader";
 import { useIncidents } from "@/hooks/useIncidents";
 import useSocket from "@/hooks/useSocket";
 
-const CreateIncidentModal = lazy(() =>
-    import("@/components/incidents/CreateIncidentModal")
+const CreateIncidentModal = lazy(
+  () => import("@/components/incidents/CreateIncidentModal"),
 );
 
 const Incidents = () => {
+  const [filters, setFilters] = useState({
+    search: "",
 
+    status: "",
+
+    severity: "",
+
+    service: "",
+  });
+  const { user } = useAuth();
     const [open, setOpen] = useState(false);
 
     const queryClient = useQueryClient();
@@ -25,16 +34,26 @@ const Incidents = () => {
         queryClient.invalidateQueries({
             queryKey: ["incidents"],
         });
-
+  });
+  useSocket("incident:created", () => {
+    queryClient.invalidateQueries({
+      queryKey: ["incidents"],
+    });
+  });
+  useSocket("incident:resolved", () => {
+    queryClient.invalidateQueries({
+      queryKey: ["incidents"],
+    });
     });
 
     const {
 
         data,
-        isLoading,
-        error,
 
-    } = useIncidents();
+        isLoading,
+
+        error,
+  } = useIncidents(filters);
 
     if (isLoading) {
 
@@ -59,7 +78,7 @@ const Incidents = () => {
                 description="Manage and monitor incidents."
 
                 action={
-
+          user?.role !== "viewer" ? (
                     <button
                         onClick={() => setOpen(true)}
                         className="flex h-11 items-center gap-2 rounded-xl bg-primary px-5 font-medium text-white"
@@ -70,12 +89,18 @@ const Incidents = () => {
                         New Incident
 
                     </button>
-
+          ) : null
                 }
 
             />
 
-            <IncidentFilters />
+      <IncidentFilters
+
+    filters={filters}
+
+    setFilters={setFilters}
+
+/>
 
             <div className="mt-6">
 
@@ -84,15 +109,7 @@ const Incidents = () => {
             </div>
 
             <Suspense fallback={<ComponentLoader />}>
-
-                <CreateIncidentModal
-
-                    open={open}
-
-                    onClose={() => setOpen(false)}
-
-                />
-
+        <CreateIncidentModal open={open} onClose={() => setOpen(false)} />
             </Suspense>
 
         </>

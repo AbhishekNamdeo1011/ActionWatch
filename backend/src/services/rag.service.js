@@ -41,7 +41,7 @@ Severity:
 ${incident.severity}
 
 Service:
-${incident.service}
+${incident.service?.name}
 
 Status:
 ${incident.status}
@@ -87,7 +87,7 @@ console.log({
     metadata: {
         incidentId: incident._id.toString(),
         severity: incident.severity,
-        service: incident.service,
+        service: incident.service?.name,
         status: incident.status,
     },
 });
@@ -99,7 +99,7 @@ console.log({
             metadata: {
                 incidentId: incident._id.toString(),
                 severity: incident.severity,
-                service: incident.service,
+                service: incident.service?.name,
                 status: incident.status,
             },
         },
@@ -328,7 +328,7 @@ incidents.sort((a, b) =>
 
         status: incident.status,
 
-        service: incident.service,
+        service: incident.service?.name,
 
         affectedUsers: incident.affectedUsers,
 

@@ -1,15 +1,21 @@
 import { lazy, Suspense, useState } from "react";
 import { useParams } from "react-router-dom";
-
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { useAuth } from "@/hooks/useAuth";
+import useSocket from "@/hooks/useSocket";
+
 import { useIncident } from "@/hooks/useIncident";
 import { useTimeline } from "@/hooks/useTimeline";
+import { useSimilarIncidents } from "@/hooks/useSimilarIncidents";
+import { usePostmortem } from "@/hooks/usePostmortem";
+
 import { useGenerateRootCause } from "@/hooks/useGenerateRootCause";
 import { useGeneratePostmortem } from "@/hooks/useGeneratePostmortem";
 
-import PageLoader from "@/components/common/PageLoader";
+import AssignResponderModal from "@/components/responders/AssignResponderModal";
+import WarRoomSkeleton from "@/components/skeletons/WarRoomSkeleton";
 
 const WarRoomHeader = lazy(() =>
     import("@/components/war-room/WarRoomHeader")
@@ -19,24 +25,32 @@ const CommandCenterCard = lazy(() =>
     import("@/components/war-room/CommandCenterCard")
 );
 
+const TimelineCard = lazy(() =>
+    import("@/components/war-room/TimelineCard")
+);
+
 const ServiceHealthCard = lazy(() =>
     import("@/components/war-room/ServiceHealthCard")
 );
 
-const TimelineCard = lazy(() =>
-    import("@/components/war-room/TimelineCard")
+const AIAnalysisCard = lazy(() =>
+    import("@/components/war-room/AIAnalysisCard")
+);
+
+const PostmortemCard = lazy(() =>
+    import("@/components/war-room/PostmortemCard")
 );
 
 const RespondersCard = lazy(() =>
     import("@/components/war-room/RespondersCard")
 );
 
-const LiveLogsCard = lazy(() =>
-    import("@/components/war-room/LiveLogsCard")
+const SimilarIncidentsCard = lazy(() =>
+    import("@/components/war-room/SimilarIncidentsCard")
 );
 
-const AIAnalysisCard = lazy(() =>
-    import("@/components/war-room/AIAnalysisCard")
+const LiveLogsCard = lazy(() =>
+    import("@/components/war-room/LiveLogsCard")
 );
 
 const ResolveIncidentCard = lazy(() =>
@@ -47,9 +61,73 @@ const WarRoom = () => {
 
     const { incidentId } = useParams();
 
+    const { user } = useAuth();
+
     const queryClient = useQueryClient();
 
     const [assignOpen, setAssignOpen] = useState(false);
+
+    /*
+    ==========================================
+    Socket Helpers
+    ==========================================
+    */
+
+    const refreshIncident = () => {
+
+        queryClient.invalidateQueries({
+
+            queryKey: ["incident", incidentId],
+
+        });
+
+    };
+
+    useSocket("incident:updated", () => {
+
+        refreshIncident();
+
+        toast.info("Incident updated.");
+
+    });
+
+    useSocket("incident:ai-generated", () => {
+
+        refreshIncident();
+
+        toast.success("AI analysis completed.");
+
+    });
+
+    useSocket("timeline:created", () => {
+
+        queryClient.invalidateQueries({
+
+            queryKey: ["timeline", incidentId],
+
+        });
+
+        toast.success("New timeline activity.");
+
+    });
+
+    useSocket("postmortem:generated", () => {
+
+        queryClient.invalidateQueries({
+
+            queryKey: ["postmortem", incidentId],
+
+        });
+
+        toast.success("AI Postmortem generated.");
+
+    });
+
+    /*
+    ==========================================
+    Queries
+    ==========================================
+    */
 
     const {
 
@@ -65,9 +143,33 @@ const WarRoom = () => {
 
     } = useTimeline(incidentId);
 
+    const {
+
+        data: similarIncidents = [],
+
+    } = useSimilarIncidents(incidentId);
+
+    const {
+
+        data: postmortem,
+
+    } = usePostmortem(incidentId);
+
+    /*
+    ==========================================
+    AI Mutations
+    ==========================================
+    */
+
     const generateRootCause = useGenerateRootCause();
 
     const generatePostmortem = useGeneratePostmortem();
+
+    /*
+    ==========================================
+    Actions
+    ==========================================
+    */
 
     const handleRefresh = async () => {
 
@@ -103,37 +205,63 @@ const WarRoom = () => {
 
     };
 
+    /*
+    ==========================================
+    Loading
+    ==========================================
+    */
+
     if (isLoading) {
 
-        return <PageLoader />;
+        return <WarRoomSkeleton />;
 
     }
 
+    /*
+    ==========================================
+    UI
+    ==========================================
+    */
+
     return (
 
-        <Suspense fallback={<PageLoader />}>
+        <Suspense fallback={<WarRoomSkeleton />}>
 
             <div className="space-y-6">
 
-                {/* ================= Header ================= */}
+                {/* Header */}
 
                 <WarRoomHeader incident={incident} />
 
-                {/* ================= Command Center ================= */}
+                {/* Command Center */}
 
                 <div className="grid gap-6 xl:grid-cols-3">
 
-                    <CommandCenterCard
+                    {
 
-                        onAssign={() => setAssignOpen(true)}
+                        user?.role !== "viewer" && (
 
-                        onGenerateAI={handleGenerateAI}
+                            <CommandCenterCard
 
-                        onGeneratePostmortem={handleGeneratePostmortem}
+                                incident={incident}
 
-                        onRefresh={handleRefresh}
+                                onAssign={() => setAssignOpen(true)}
 
-                    />
+                                onGenerateAI={handleGenerateAI}
+
+                                onGeneratePostmortem={handleGeneratePostmortem}
+
+                                onRefresh={handleRefresh}
+
+                                generatingAI={generateRootCause.isPending}
+
+                                generatingPostmortem={generatePostmortem.isPending}
+
+                            />
+
+                        )
+
+                    }
 
                     <div className="xl:col-span-2">
 
@@ -141,66 +269,79 @@ const WarRoom = () => {
 
                             timeline={timeline}
 
+                            incidentId={incidentId}
+
                         />
 
                     </div>
 
                 </div>
 
-                {/* ================= Service + AI ================= */}
+                {/* Service + AI */}
 
-                <div className="grid gap-6 xl:grid-cols-2">
+               <div className="grid gap-6 xl:grid-cols-3">
 
-                    <ServiceHealthCard
+    <ServiceHealthCard incident={incident} />
 
-                        incident={incident}
+    <AIAnalysisCard incident={incident} />
 
-                    />
+    <PostmortemCard postmortem={postmortem} />
 
-                    <AIAnalysisCard
+</div>
 
-                        incident={incident}
-
-                    />
-
-                </div>
-
-                {/* ================= Responders ================= */}
+                {/* Responders */}
 
                 <RespondersCard
 
-                    responders={incident.assignedTo}
+                    responders={incident?.assignedTo || []}
+
+                    incidentId={incident?._id}
 
                 />
 
-                {/* ================= Logs ================= */}
+                {/* Similar Incidents */}
+
+                <SimilarIncidentsCard
+
+                    incidents={similarIncidents}
+
+                />
+
+                {/* Logs */}
 
                 <LiveLogsCard
 
-                    logs={incident.errorLogs}
+                    logs={incident?.errorLogs}
 
                 />
 
-                {/* ================= Resolve ================= */}
+                {/* Resolve */}
 
-                <ResolveIncidentCard
+                {
 
-                    incident={incident}
+                    user?.role !== "viewer" && (
 
-                />
+                        <ResolveIncidentCard
 
-                {/*
-                ==========================================
-                Assign Responder Modal
-                Uncomment once integrated
-                ==========================================
+                            incident={incident}
+
+                        />
+
+                    )
+
+                }
+
+                {/* Assign Modal */}
 
                 <AssignResponderModal
+
                     open={assignOpen}
+
                     onClose={() => setAssignOpen(false)}
+
                     incident={incident}
+
                 />
-                */}
 
             </div>
 

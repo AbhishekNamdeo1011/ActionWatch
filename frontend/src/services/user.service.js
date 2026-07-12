@@ -1,7 +1,12 @@
-import { getUsers } from "@/api/user.api";
+import {
+    getUsers,
+    updateUserRole,
+} from "@/api/user.api";
 
 export const userService = {
 
     getUsers,
+
+    updateUserRole,
 
 };

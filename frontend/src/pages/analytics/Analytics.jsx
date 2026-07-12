@@ -11,6 +11,9 @@ const SeverityChart = lazy(() =>
 const AnalyticsOverview = lazy(() =>
     import("@/components/analytics/AnalyticsOverview")
 );
+
+
+
 const StatusChart = lazy(() =>
     import("@/components/analytics/StatusChart")
 );
@@ -42,14 +45,16 @@ const Analytics = () => {
     }
 
     if (error) {
-
-        return <h2>Failed to load analytics.</h2>;
-
+        return (
+            <h2 className="text-red-500">
+                Failed to load analytics.
+            </h2>
+        );
     }
 
     return (
 
-        <>
+        <div className="space-y-8">
 
             <PageHeader
 
@@ -59,13 +64,20 @@ const Analytics = () => {
 
             />
 
-<div className="mt-8 grid gap-6 lg:grid-cols-2"><Suspense fallback={<ComponentLoader />}>
+            {/* ================= KPI Cards ================= */}
+
+            <Suspense fallback={<ComponentLoader />}>
 
     <AnalyticsOverview
         data={data}
     />
 
 </Suspense>
+
+            {/* ================= Charts Row 1 ================= */}
+
+            <div className="grid gap-6 xl:grid-cols-2">
+
                 <Suspense fallback={<ComponentLoader />}>
 
                     <SeverityChart
@@ -85,6 +97,12 @@ const Analytics = () => {
                     />
 
                 </Suspense>
+
+            </div>
+
+            {/* ================= Charts Row 2 ================= */}
+
+            <div className="grid gap-6 xl:grid-cols-2">
 
                 <Suspense fallback={<ComponentLoader />}>
 
@@ -108,7 +126,7 @@ const Analytics = () => {
 
             </div>
 
-        </>
+        </div>
 
     );
 

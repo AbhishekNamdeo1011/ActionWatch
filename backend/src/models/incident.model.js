@@ -45,18 +45,9 @@ const incidentSchema = new mongoose.Schema(
         },
 
         service: {
-            type: String,
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "service",
             required: true,
-            enum: [
-                "payment",
-                "auth",
-                "database",
-                "api",
-                "frontend",
-                "cdn",
-                "email",
-                "other",
-            ],
         },
 
         affectedUsers: {
@@ -173,21 +164,21 @@ const incidentSchema = new mongoose.Schema(
                 type: String,
             },
         ],
-aiRawResponse: {
+        aiRawResponse: {
 
-    type: String,
+            type: String,
 
-    default: "",
+            default: "",
 
-},
+        },
 
-aiGeneratedAt: {
+        aiGeneratedAt: {
 
-    type: Date,
+            type: Date,
 
-    default: null,
+            default: null,
 
-},
+        },
         aiSimilarIncidents: [
             {
                 incidentId: {
@@ -207,15 +198,15 @@ aiGeneratedAt: {
                 },
             },
         ],
-postmortem: {
+        postmortem: {
 
-    type: mongoose.Schema.Types.ObjectId,
+            type: mongoose.Schema.Types.ObjectId,
 
-    ref: "postmortem",
+            ref: "postmortem",
 
-    default: null,
+            default: null,
 
-},
+        },
         aiPostmortem: {
             type: String,
             default: "",

@@ -9,7 +9,7 @@ import {
 
 export const incidentService = {
 
-    getAll: getIncidents,
+    getAll: (params) => getIncidents(params),
 
     getOne: getIncident,
 

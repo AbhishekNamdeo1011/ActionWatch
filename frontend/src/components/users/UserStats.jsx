@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState } from "react";
 
 import PageHeader from "@/components/common/PageHeader";
-import UserSkeleton from "@/components/users/UserSkeleton";
+import ComponentLoader from "@/components/common/ComponentLoader";
 
 import { useUsers } from "@/hooks/useUsers";
 
@@ -39,7 +39,7 @@ const UserManagement = () => {
 
     if (isLoading) {
 
-        return <UserSkeleton />;
+        return <ComponentLoader />;
 
     }
 
@@ -49,7 +49,7 @@ const UserManagement = () => {
 
             <div className="flex h-64 items-center justify-center">
 
-                <p className="text-red-500 text-lg">
+                <p className="text-red-500">
 
                     Failed to load users.
 
@@ -75,7 +75,7 @@ const UserManagement = () => {
 
             <div className="mt-8">
 
-                <Suspense fallback={<UserSkeleton />}>
+                <Suspense fallback={<ComponentLoader />}>
 
                     <UserStats users={users} />
 
@@ -85,7 +85,7 @@ const UserManagement = () => {
 
             <div className="mt-6">
 
-                <Suspense fallback={<UserSkeleton />}>
+                <Suspense fallback={<ComponentLoader />}>
 
                     <UserFilters
 
@@ -101,7 +101,7 @@ const UserManagement = () => {
 
             <div className="mt-6">
 
-                <Suspense fallback={<UserSkeleton />}>
+                <Suspense fallback={<ComponentLoader />}>
 
                     <UserTable
 

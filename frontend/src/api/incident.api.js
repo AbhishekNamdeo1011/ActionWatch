@@ -5,10 +5,11 @@ import api from "./axios";
 Get All Incidents
 =====================================
 */
+export const getIncidents = async (params = {}) => {
 
-export const getIncidents = async () => {
-
-    const { data } = await api.get("/incidents");
+    const { data } = await api.get("/incidents", {
+        params,
+    });
 
     return data.data;
 

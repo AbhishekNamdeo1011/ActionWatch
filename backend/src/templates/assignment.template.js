@@ -69,7 +69,7 @@ ${incident.severity}
 
 <b>Service:</b>
 
-${incident.service}
+${incident.service?.name}
 
 </p>
 

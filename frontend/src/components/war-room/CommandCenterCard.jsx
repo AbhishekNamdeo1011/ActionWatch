@@ -11,37 +11,60 @@ const CommandCenterCard = ({
     onGenerateAI,
     onGeneratePostmortem,
     onRefresh,
+    generatingAI,
+    generatingPostmortem,
 }) => {
 
     return (
 
-        <Card title="Command Center">
+        <Card
+            title="Command Center"
+            subtitle="Manage incident operations."
+        >
 
             <div className="grid gap-3">
 
                 <button
-    onClick={onGenerateAI}
-    className="flex items-center gap-3 rounded-xl border border-border p-3 transition hover:border-primary"
->
-    <Brain size={18} />
-    Generate AI Analysis
-</button>
+                    onClick={onAssign}
+                    className="flex items-center gap-3 rounded-xl border border-border p-3 transition hover:border-primary hover:bg-background"
+                >
+                    <UserPlus size={18} />
+                    Assign Responders
+                </button>
 
-<button
-    onClick={onGeneratePostmortem}
-    className="flex items-center gap-3 rounded-xl border border-border p-3 transition hover:border-primary"
->
-    <FileText size={18} />
-    Generate Postmortem
-</button>
+                <button
+                    onClick={onGenerateAI}
+                    disabled={generatingAI}
+                    className="flex items-center gap-3 rounded-xl border border-border p-3 transition hover:border-primary hover:bg-background disabled:opacity-50"
+                >
+                    <Brain size={18} />
 
-<button
-    onClick={onRefresh}
-    className="flex items-center gap-3 rounded-xl border border-border p-3 transition hover:border-primary"
->
-    <RefreshCw size={18} />
-    Refresh Data
-</button>
+                    {generatingAI
+                        ? "Generating AI..."
+                        : "Generate AI Analysis"}
+
+                </button>
+
+                <button
+                    onClick={onGeneratePostmortem}
+                    disabled={generatingPostmortem}
+                    className="flex items-center gap-3 rounded-xl border border-border p-3 transition hover:border-primary hover:bg-background disabled:opacity-50"
+                >
+                    <FileText size={18} />
+
+                    {generatingPostmortem
+                        ? "Generating..."
+                        : "Generate Postmortem"}
+
+                </button>
+
+                <button
+                    onClick={onRefresh}
+                    className="flex items-center gap-3 rounded-xl border border-border p-3 transition hover:border-primary hover:bg-background"
+                >
+                    <RefreshCw size={18} />
+                    Refresh Data
+                </button>
 
             </div>
 

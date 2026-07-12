@@ -9,6 +9,7 @@ const {
     data: services = [],
     isLoading: servicesLoading,
 } = useServices();
+
     const {
         register,
         handleSubmit,
@@ -151,7 +152,7 @@ const {
 
                 <option
                     key={service._id}
-                    value={service.name}
+                    value={service._id}
                 >
 
                     {service.name}

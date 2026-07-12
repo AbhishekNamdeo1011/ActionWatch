@@ -379,11 +379,7 @@ const logout = asyncHandler(async (req, res) => {
     session.revoked = true;
     await session.save();
 
-    res.clearCookie("refreshToken", {
-        httpOnly: true,
-        secure: true,
-        sameSite: "Strict"
-    });
+   res.clearCookie("refreshToken", cookieOptions);
 
     res.status(200).json({ message: "Logout successful" });
 
@@ -408,7 +404,7 @@ const logoutAll = asyncHandler(async (req, res) => {
         revoked: true
     });
 
-    res.clearCookie("refreshToken");
+    res.clearCookie("refreshToken", cookieOptions);
 
     res.status(200).json({
         message: "Logged out from all devices successfully"

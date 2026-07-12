@@ -9,20 +9,18 @@ import { lazy, Suspense } from "react";
 import ComponentLoader from "@/components/common/ComponentLoader";
 import Timeline from "@/components/timeline/Timeline";
 import { useTimeline } from "@/hooks/useTimeline";
+import { useAuth } from "@/hooks/useAuth";
 const EditIncidentModal = lazy(
   () => import("@/components/incidents/EditIncidentModal"),
 );
 const IncidentDetails = () => {
   const { incidentId } = useParams();
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const { data, isLoading, error } = useIncident(incidentId);
 const incident = data;
-const {
-
-    data: timeline = [],
-
-} = useTimeline(incidentId);
+  const { data: timeline = [] } = useTimeline(incidentId);
   if (isLoading) {
     return (
       <div className="flex h-96 items-center justify-center">
@@ -50,23 +48,13 @@ const {
       <div className="flex items-start justify-between">
 
     <div>
+          <h1 className="text-3xl font-bold">{incident.title}</h1>
 
-        <h1 className="text-3xl font-bold">
-
-            {incident.title}
-
-        </h1>
-
-        <p className="mt-2 text-muted">
-
-            Incident Details
-
-        </p>
-
+          <p className="mt-2 text-muted">Incident Details</p>
     </div>
 
     <div className="flex gap-3">
-
+          {user?.role !== "viewer" ? (
         <button
 
             onClick={() => navigate(`/war-room/${incident._id}`)}
@@ -78,13 +66,15 @@ const {
             Open War Room
 
         </button>
+          ) : null}
 
+          {user?.role !== "viewer" ? (
         <button
 
-            onClick={() => setOpen(true)}
+            
 
             className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-white"
-
+              onClick={() => setOpen(true)}
         >
 
             <Pencil size={18} />
@@ -92,7 +82,7 @@ const {
             Edit
 
         </button>
-
+          ) : null}
     </div>
 
 </div>
@@ -104,7 +94,7 @@ const {
 
         <IncidentInfoCard label="Severity" value={incident.severity} />
 
-        <IncidentInfoCard label="Service" value={incident.service} />
+        <IncidentInfoCard label="Service" value={incident.service?.name} />
 
         <IncidentInfoCard label="Detected By" value={incident.detectedBy} />
       </div>
@@ -144,8 +134,27 @@ const {
       <Card title="Possible Root Causes">
         {incident.aiRootCauses && incident.aiRootCauses.length > 0 ? (
           <ul className="list-disc space-y-2 pl-5">
-            {incident.aiRootCauses.map((cause, index) => (
-              <li key={index}>{cause}</li>
+            {incident.aiRootCauses.map((cause) => (
+              <li
+                key={cause._id}
+                className="rounded-xl border border-border p-4"
+              >
+                <h4 className="font-semibold">{cause.cause}</h4>
+
+                <p className="mt-2 text-sm text-muted">{cause.reasoning}</p>
+
+                <div className="mt-3 flex items-center justify-between">
+                  <span className="rounded-full bg-primary/10 px-3 py-1 text-xs">
+                    Confidence: {cause.confidence}%
+                  </span>
+                </div>
+
+                <div className="mt-4 rounded-lg bg-green-500/10 p-3">
+                  <p className="font-medium">Suggested Fix</p>
+
+                  <p className="mt-1 text-sm">{cause.suggestedFix}</p>
+                </div>
+              </li>
             ))}
           </ul>
         ) : (
@@ -194,13 +203,7 @@ const {
 
       {/* ================= Timeline ================= */}
 <Card title="Activity Timeline">
-
-    <Timeline
-
-        events={timeline}
-
-    />
-
+        <Timeline events={timeline} />
 </Card>
       <Suspense fallback={<ComponentLoader />}>
         <EditIncidentModal

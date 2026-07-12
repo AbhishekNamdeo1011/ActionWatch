@@ -40,7 +40,7 @@ const WarRoomHeader = ({ incident }) => {
 
                     <span className="rounded-full bg-green-500/10 px-4 py-2 text-sm font-semibold text-green-500">
 
-                        {incident.service}
+                        {incident.service?.name}
 
                     </span>
 

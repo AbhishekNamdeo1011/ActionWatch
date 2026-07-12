@@ -148,6 +148,10 @@ export const getIncidentsService = async (queryParams) => {
     const incidents = await IncidentModel
 
         .find(filter)
+        .populate(
+    "service",
+    "name currentStatus"
+)
         .select(
             "title severity status service affectedUsers detectedAt createdAt assignedTo"
         )
@@ -207,6 +211,11 @@ export const getIncidentByIdService = async (incidentId) => {
     const incident = await IncidentModel
 
         .findById(incidentId)
+
+.populate(
+    "service",
+    "name currentStatus"
+)
 
        .populate(
             "assignedTo",
@@ -316,8 +325,10 @@ export const updateIncidentService = async (
     // -------------------------
 
     const existingIncident =
-        await IncidentModel.findById(
-            incidentId
+        await IncidentModel.findById(incidentId)
+.populate(
+    "service",
+    "name currentStatus"
         );
 
     if (!existingIncident) {
@@ -512,7 +523,11 @@ export const assignResponderService = async (
     }
 
     // Find incident
-    const incident = await IncidentModel.findById(incidentId);
+    const incident = await IncidentModel.findById(incidentId)
+.populate(
+    "service",
+    "name currentStatus"
+);
 
     if (!incident) {
         const error = new Error("Incident not found");
@@ -605,7 +620,11 @@ export const removeResponderService = async (
         throw error;
     }
 
-    const incident = await IncidentModel.findById(incidentId);
+    const incident = await IncidentModel.findById(incidentId)
+.populate(
+    "service",
+    "name currentStatus"
+);
 
     if (!incident) {
         const error = new Error("Incident not found");
@@ -635,7 +654,11 @@ export const removeResponderService = async (
         incident.assignedTo.map(id => id.toString())
     );
     await incident.save();
-    const updated = await IncidentModel.findById(incidentId);
+    const updated = await IncidentModel.findById(incidentId)
+.populate(
+    "service",
+    "name currentStatus"
+);
 
     console.log(
         "Database:",
@@ -694,7 +717,7 @@ export const createAutomaticIncident = async (
 
         status: "open",
 
-        service: "api",
+        service: service._id,
 
         detectedBy: "monitor",
 
@@ -830,6 +853,9 @@ export const resolveAutomaticIncident = async (
 
     const incident = await IncidentModel.findById(
         incidentId
+    ).populate(
+        "service",
+        "name currentStatus"
     );
 
     if (!incident) {

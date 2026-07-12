@@ -32,7 +32,7 @@ Severity:
 ${incident.severity}
 
 Service:
-${incident.service}
+${incident.service?.name}
 
 Status:
 ${incident.status}

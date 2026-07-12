@@ -21,7 +21,7 @@ const ServiceHealthCard = ({ incident }) => {
 
                         <span className="font-medium">
 
-                            {incident.service}
+                            {incident.service?.name}
 
                         </span>
 
