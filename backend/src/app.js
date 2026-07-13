@@ -25,7 +25,7 @@ app.use(helmet());
 
 app.use(
     cors({
-        origin: "http://localhost:5173",
+        origin: process.env.CLIENT_URL,
        
     
         credentials: true,
@@ -57,7 +57,18 @@ app.use(
     userRoutes
 
 );
-
+app.get("/", (req, res) => {
+    res.status(200).json({
+        success: true,
+        message: "ActionWatch Backend is running 🚀",
+    });
+});
+app.get("/api/health", (req, res) => {
+    res.status(200).json({
+        success: true,
+        status: "healthy",
+    });
+});
 app.use(notFound); 
 app.use(errorHandler);
 
