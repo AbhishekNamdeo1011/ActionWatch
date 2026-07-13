@@ -215,14 +215,14 @@ const updateProfile = asyncHandler(async (req, res) => {
         updates.expertise = expertise;
     }
 
-    const user = await userModel.findByIdAndUpdate(
-        req.user._id,
-        updates,
-        {
-            new: true,
-            runValidators: true
-        }
-    ).select("-password");
+   const user = await userModel.findByIdAndUpdate(
+    req.user._id,
+    updates,
+    {
+        returnDocument: "after",
+        runValidators: true
+    }
+).select("-password");
 
     return res.status(200).json({
         message: "Profile updated successfully",

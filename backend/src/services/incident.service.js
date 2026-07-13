@@ -353,7 +353,7 @@ export const updateIncidentService = async (
 
                 {
 
-                    new: true,
+                 returnDocument: "after",
 
                     runValidators: true,
 

@@ -31,7 +31,7 @@ export const createService = async (serviceData) => {
         error.statusCode = 409;
         throw error;
     }
-
+findByIdAndUpdate
     const service = await ServiceModel.create({
         name,
         description,
@@ -263,20 +263,14 @@ export const updateService = async (
     }
 
    const service = await ServiceModel.findByIdAndUpdate(
-
     serviceId,
-
     payload,
-
     {
-
-        new: true,
-
+        returnDocument: "after",
         runValidators: true,
-
     }
-
-).populate(
+)
+.populate(
 
     "createdBy",
 
@@ -428,7 +422,7 @@ export const updateServiceSuccess = async (
 
         {
 
-            new: true,
+           returnDocument: "after",
 
         }
 
@@ -515,7 +509,7 @@ export const setActiveIncident = async (
         },
 
         {
-            new: true,
+            returnDocument: "after",
         }
 
     );
@@ -541,7 +535,7 @@ export const clearActiveIncident = async (
         },
 
         {
-            new: true,
+            returnDocument: "after",
         }
 
     );

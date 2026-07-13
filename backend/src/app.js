@@ -62,7 +62,7 @@ app.get("/", (req, res) => {
         success: true,
         message: "ActionWatch Backend is running 🚀",
     });
-});
+}); 
 app.get("/api/health", (req, res) => {
     res.status(200).json({
         success: true,
