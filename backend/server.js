@@ -25,7 +25,7 @@ server.listen(PORT, () => {
 });
 
             // 5. Start Monitoring Scheduler
-            // startMonitoring();
+            startMonitoring();
 
     
 
