@@ -51,3 +51,21 @@ export const getCurrentUser = async () => {
     return data;
 
 };
+
+export const googleLogin = async (credential) => {
+
+    const { data } = await api.post(
+
+        "/auth/google-login",
+
+        {
+
+            credential,
+
+        }
+
+    );
+
+    return data;
+
+};

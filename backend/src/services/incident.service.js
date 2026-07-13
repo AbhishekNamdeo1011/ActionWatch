@@ -606,8 +606,7 @@ export const removeResponderService = async (
     incidentId,
     userId
 ) => {
-    console.log("Incident ID:", incidentId);
-    console.log("User ID:", userId);
+   
     if (!mongoose.Types.ObjectId.isValid(incidentId)) {
         const error = new Error("Invalid Incident ID");
         error.statusCode = 400;
@@ -641,18 +640,12 @@ export const removeResponderService = async (
         error.statusCode = 400;
         throw error;
     }
-    console.log(
-        "Before:",
-        incident.assignedTo.map(id => id.toString())
-    );
+    
 
     incident.assignedTo = incident.assignedTo.filter(
         id => id.toString() !== userId
     );
-    console.log(
-        "After:",
-        incident.assignedTo.map(id => id.toString())
-    );
+
     await incident.save();
     const updated = await IncidentModel.findById(incidentId)
 .populate(
@@ -660,10 +653,7 @@ export const removeResponderService = async (
     "name currentStatus"
 );
 
-    console.log(
-        "Database:",
-        updated.assignedTo.map(id => id.toString())
-    );
+    
     await incident.populate([
         {
             path: "createdBy",
@@ -728,14 +718,14 @@ export const createAutomaticIncident = async (
         detectedAt: new Date(),
 
     });
-    console.log("Service Name:", service.name);
+   
 
     const responder =
         await findBestResponder(
             service.name
         );
 
-    console.log("Responder:", responder);
+  
     if (responder) {
 
         incident.assignedTo = [
@@ -818,25 +808,7 @@ Notify Assigned Responder
         }
 
     });
-    if (responder) {
-
-        console.log(
-
-            "✅ Assigned:",
-
-            responder.username
-
-        );
-
-    } else {
-
-        console.log(
-
-            "⚠ No responder available."
-
-        );
-
-    }
+    
     return incident;
 
 };
@@ -875,13 +847,13 @@ export const resolveAutomaticIncident = async (
     await incident.save();
 
 
-    console.log("Uploading incident embedding...");
+    
     await generatePostmortem(
         incident._id
     );
     await storeVector(incident);
 
-    console.log("Incident embedding uploaded.");
+   
 
     await createTimelineEntry({
 

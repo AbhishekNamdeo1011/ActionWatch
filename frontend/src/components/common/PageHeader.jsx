@@ -1,3 +1,4 @@
+import {memo} from "react";
 const PageHeader = ({
     title,
     description,

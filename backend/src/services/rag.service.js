@@ -1,6 +1,7 @@
 import { pineconeIndex } from "../config/pinecone.js";
 import { generateEmbedding } from "./embedding.service.js";
 import mongoose from "mongoose";
+import IncidentModel from "../models/incident.model.js";
 
 /*
 ==========================================
@@ -19,15 +20,17 @@ export const buildIncidentDocument = (
 
 ) => {
 
-    const causes =
-        incident.aiRootCauses
-            ?.map(c => c.cause)
-            .join(", ") || "None";
-
-    const fixes =
-        incident.aiRootCauses
-            ?.map(c => c.suggestedFix)
-            .join(", ") || "None";
+    const causes = incident.aiRootCauses
+    ?.slice(0, 5)
+    .map(c => c.cause)
+    .join(", ") || "None";
+const logs = incident.errorLogs
+    ? incident.errorLogs.slice(0, 1500)
+    : "None";
+   const fixes = incident.aiRootCauses
+    ?.slice(0, 5)
+    .map(c => c.suggestedFix)
+    .join(", ") || "None";
 
     return `
 
@@ -50,7 +53,7 @@ Affected Users:
 ${incident.affectedUsers}
 
 Error Logs:
-${incident.errorLogs || "None"}
+${logs}
 
 Root Cause Summary:
 ${incident.aiSummary || "None"}
@@ -69,44 +72,31 @@ ${incident.tags?.join(", ") || "None"}
 };
 export const storeVector = async (incident) => {
 
-    console.log("========== PINECONE ==========");
-    console.log("Preparing vector...");
-    console.log("Incident:", incident._id.toString());
+ 
 
     const text = buildIncidentDocument(incident);
 
-    console.log("Document:");
-    console.log(text);
+
 
     const embedding = await generateEmbedding(text);
 
-    console.log("Embedding Size:", embedding.length);
-console.log({
-    id: incident._id.toString(),
-    vectorLength: embedding.length,
-    metadata: {
-        incidentId: incident._id.toString(),
-        severity: incident.severity,
-        service: incident.service?.name,
-        status: incident.status,
-    },
-});
-   await pineconeIndex.upsert({
-    records: [
-        {
-            id: incident._id.toString(),
-            values: embedding,
-            metadata: {
-                incidentId: incident._id.toString(),
-                severity: incident.severity,
-                service: incident.service?.name,
-                status: incident.status,
+    
+    await pineconeIndex.upsert({
+        records: [
+            {
+                id: incident._id.toString(),
+                values: embedding,
+                metadata: {
+                    incidentId: incident._id.toString(),
+                    severity: incident.severity,
+                    service: incident.service?.name,
+                    status: incident.status,
+                },
             },
-        },
-    ],
-});
+        ],
+    });
 
-    console.log("✅ Uploaded to Pinecone");
+   
 };
 /*
 ==========================================
@@ -202,7 +192,6 @@ Fetch Similar Incidents
 ==========================================
 */
 
-import IncidentModel from "../models/incident.model.js";
 
 export const getSimilarIncidents = async (
 
@@ -226,19 +215,19 @@ export const getSimilarIncidents = async (
     Remove Current Incident
     ============================
     */
-const filtered = matches
-    .filter(match => {
+    const filtered = matches
+        .filter(match => {
 
-        return (
+            return (
 
-            match.id !== incident._id.toString() &&
+                match.id !== incident._id.toString() &&
 
-            match.score >= 0.80
+                match.score >= 0.80
 
-        );
+            );
 
-    })
-    .slice(0, 3);
+        })
+        .slice(0, 3);
 
     /*
     ============================
@@ -259,8 +248,8 @@ const filtered = matches
     */
 
     const ids = filtered
-    .map(match => match.id)
-    .filter(id => mongoose.Types.ObjectId.isValid(id));
+        .map(match => match.id)
+        .filter(id => mongoose.Types.ObjectId.isValid(id));
 
     /*
     ============================
@@ -268,40 +257,60 @@ const filtered = matches
     ============================
     */
 
-    const incidents =
+    const incidents = await IncidentModel.find({
 
-        await IncidentModel.find({
+        _id: {
 
-            _id: {
+            $in: ids,
 
-                $in: ids,
+        },
 
-            },
+    })
 
-        });
-        const scoreMap = new Map(
+        .select(
+            `
+title
+description
+severity
+status
+service
+affectedUsers
+detectedAt
+resolvedAt
+mttr
+aiSummary
+`
+        )
 
-    filtered.map(
+        .populate(
+            "service",
+            "name"
+        )
 
-        match => [
+        .lean();
+    const scoreMap = new Map(
 
-            match.id,
+        filtered.map(
 
-            match.score,
+            match => [
 
-        ]
+                match.id,
 
-    )
+                match.score,
 
-);
+            ]
 
-incidents.sort((a, b) =>
+        )
 
-    scoreMap.get(b._id.toString()) -
+    );
 
-    scoreMap.get(a._id.toString())
+    incidents.sort((a, b) =>
 
-);
+        scoreMap.get(b._id.toString()) -
+
+        scoreMap.get(a._id.toString())
+
+    );
 
     /*
     ============================
@@ -309,43 +318,43 @@ incidents.sort((a, b) =>
     ============================
     */
 
-  return incidents.map((incident) => {
+    return incidents.map((incident) => {
 
-    const similarity =
-        scoreMap.get(
-            incident._id.toString()
-        );
+        const similarity =
+            scoreMap.get(
+                incident._id.toString()
+            );
 
-    return {
+        return {
 
-        id: incident._id,
+            _id: incident._id,
 
-        title: incident.title,
+            title: incident.title,
 
-        description: incident.description,
+            description: incident.description,
 
-        severity: incident.severity,
+            severity: incident.severity,
 
-        status: incident.status,
+            status: incident.status,
 
-        service: incident.service?.name,
+            service: incident.service?.name,
 
-        affectedUsers: incident.affectedUsers,
+            affectedUsers: incident.affectedUsers,
 
-        detectedAt: incident.detectedAt,
+            detectedAt: incident.detectedAt,
 
-        resolvedAt: incident.resolvedAt,
+            resolvedAt: incident.resolvedAt,
 
-        mttr: incident.mttr,
+            mttr: incident.mttr,
 
-        summary: incident.aiSummary,
+            summary: incident.aiSummary,
 
-        similarity: Number(
-            (similarity * 100).toFixed(1)
-        ),
+            similarity: Number(
+                (similarity * 100).toFixed(1)
+            ),
 
-    };
+        };
 
-});
+    });
 
 }; 

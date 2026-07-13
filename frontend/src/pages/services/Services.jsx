@@ -8,7 +8,7 @@ import { Suspense } from "react";
 const CreateServiceModal = lazy(() =>
     import("@/components/services/CreateServiceModal")
 );import { useQueryClient } from "@tanstack/react-query";
-import useSocket from "@/hooks/useSocket";
+import useSocket from "@/hooks/sockets/useSocket";
 const Services = () => {
      const [open, setOpen] = useState(false);
     const queryClient = useQueryClient();

@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import Card from "@/components/common/Card";
 
-import { useUsers } from "@/hooks/useUsers";
+import { useUsers } from "@/hooks/users/useUsers";
 import { useAssignResponder } from "@/hooks/responder/useAssignResponder";
 
 import UserCard from "./UserCard";

@@ -49,9 +49,7 @@ export const emitPresenceOnline = (io, roomName, user) => {
 };
 
 export const emitPresenceOffline = (io, roomName, user) => {
-  console.log("\n========== OFFLINE EVENT ==========");
-    console.log("Room:", roomName);
-    console.log("User:", user.username);
+
     io.to(roomName).emit("presence:offline", {
         userId: user._id,
         username: user.username

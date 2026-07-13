@@ -1,6 +1,6 @@
 import Card from "@/components/common/Card";
 import IncidentForm from "./IncidentForm";
-import { useUpdateIncident } from "@/hooks/useUpdateIncident";
+import { useUpdateIncident } from "@/hooks/incidents/useUpdateIncident";
 
 const EditIncidentModal = ({
     incident,

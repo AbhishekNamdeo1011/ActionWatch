@@ -33,9 +33,7 @@ export const addOnlineUser = (user, socketId) => {
         .sockets
         .add(socketId);
 
-    console.log("\n========== USER CONNECTED ==========");
-    console.log("User:", user.username);
-    console.log("Online Users:", getOnlineUsers());
+   
 
 };
 
@@ -55,15 +53,9 @@ export const removeOnlineUser = (userId, socketId) => {
 
         onlineUsers.delete(userId);
 
-        console.log("\n========== USER OFFLINE ==========");
-        console.log("User:", user.username);
-        console.log("Online Users:", getOnlineUsers());
-
         return true;
     }
 
-    console.log("\nSocket removed but user still online.");
-    console.log("Online Users:", getOnlineUsers());
 
     return false;
 };

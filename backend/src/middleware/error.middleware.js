@@ -7,7 +7,10 @@ const notFound = (req, res, next) => {
 };
 
 const errorHandler = (err, req, res, next) => {
-
+ console.error("===== ERROR =====");
+    console.error(err);
+    console.error("Route:", req.originalUrl);
+    console.error("=================");
     let statusCode =
         res.statusCode !== 200
             ? res.statusCode

@@ -23,8 +23,7 @@ export const joinIncidentRoom = async (socket, incidentId) => {
     const roomName = `war-room:${incidentId}`;
     socket.join(roomName);
 
-    console.log(`${socket.user.username} joined ${roomName}`);
-    console.log(socket.rooms);
+   
 };
 
 export const leaveIncidentRoom = async (socket, incidentId) => {
@@ -33,8 +32,6 @@ export const leaveIncidentRoom = async (socket, incidentId) => {
 
     socket.leave(roomName);
 
-    console.log(
-        `${socket.user.username} left ${roomName}`
-    );
+   
 
 };

@@ -3,7 +3,7 @@ import { toast } from "sonner";
 
 import { loginService } from "@/services/auth.service";
 import { useAuth } from "@/hooks/auth/useAuth";
-
+import { googleLoginService } from "@/services/auth.service";
 export const useLogin = () => {
 
     const navigate = useNavigate();
@@ -20,7 +20,7 @@ export const useLogin = () => {
 
                 accessToken: response.accessToken,
 
-                user: response.user,
+                user: response.data.user,
 
             });
 
@@ -43,10 +43,68 @@ export const useLogin = () => {
         }
 
     };
+    const handleGoogleLogin = async (credential) => {
+
+    try {
+
+        const response =
+
+        await googleLoginService(
+
+            credential
+
+        );
+
+        login({
+
+            accessToken:
+
+            response.data.accessToken,
+
+            user:
+
+            response.data.user,
+
+        });
+
+        toast.success(
+
+            response.message
+
+        );
+
+        navigate(
+
+            "/dashboard",
+
+            {
+
+                replace:true,
+
+            }
+
+        );
+
+    }
+
+    catch(error){
+
+        toast.error(
+
+            error.response?.data?.message ||
+
+            "Google login failed"
+
+        );
+
+    }
+
+};
 
     return {
 
         handleLogin,
+        handleGoogleLogin,
 
     };
 

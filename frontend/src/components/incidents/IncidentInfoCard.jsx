@@ -1,3 +1,4 @@
+import {memo} from "react";
 const IncidentInfoCard = ({
 
     label,
@@ -28,4 +29,4 @@ const IncidentInfoCard = ({
 
 };
 
-export default IncidentInfoCard;
+export default memo(IncidentInfoCard);

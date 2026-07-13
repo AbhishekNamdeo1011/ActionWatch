@@ -24,7 +24,7 @@ export const getIncident = async (incidentId) => {
 
     const response = await api.get(`/incidents/${incidentId}`);
 
-    console.log("API Response:", response.data);
+  
 
     return response.data.data;
 

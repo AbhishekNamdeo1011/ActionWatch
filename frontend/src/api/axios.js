@@ -131,11 +131,11 @@ api.interceptors.response.use(
 
             );
 
-            setToken(data.accessToken);
+            setToken( data.data.accessToken);
 
-            processQueue(null, data.accessToken);
+            processQueue(null,  data.data.accessToken);
 
-            originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+            originalRequest.headers.Authorization = `Bearer ${ data.data.accessToken}`;
 
             return api(originalRequest);
 

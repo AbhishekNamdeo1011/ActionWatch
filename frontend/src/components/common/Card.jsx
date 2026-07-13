@@ -1,3 +1,5 @@
+import { memo } from "react";
+
 const Card = ({
     title,
     subtitle,
@@ -56,4 +58,4 @@ const Card = ({
 
 };
 
-export default Card;
+export default memo(Card);

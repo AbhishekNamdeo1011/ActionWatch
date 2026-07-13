@@ -1,6 +1,6 @@
 import Card from "@/components/common/Card";
 import { CheckCircle2 } from "lucide-react";
-import { useUpdateIncident } from "@/hooks/useUpdateIncident";
+import { useUpdateIncident } from "@/hooks/incidents/useUpdateIncident";
 
 const ResolveIncidentCard = ({ incident }) => {
 

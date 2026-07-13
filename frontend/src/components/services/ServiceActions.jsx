@@ -10,7 +10,7 @@ import { lazy, Suspense } from "react";
 const EditServiceModal = lazy(() =>
     import("./EditServiceModal")
 );import { useDeleteService } from "@/hooks/services/useDeleteService";
-import { useToggleMonitoring } from "@/hooks/useToggleMonitoring";
+import { useToggleMonitoring } from "@/hooks/monitoring/useToggleMonitoring";
 
 const ServiceActions = ({ service }) => {
 

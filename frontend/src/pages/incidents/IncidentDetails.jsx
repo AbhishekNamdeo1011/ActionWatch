@@ -8,7 +8,7 @@ import Timeline from "@/components/timeline/Timeline";
 
 import IncidentDetailsSkeleton from "@/components/skeletons/IncidentDetailsSkeleton";
 import { useIncident } from "@/hooks/incidents/useIncident";
-import { useTimeline } from "@/hooks/useTimeline";
+import { useTimeline } from "@/hooks/timeline/useTimeline";
 import { useAuth } from "@/hooks/auth/useAuth";
 
 const EditIncidentModal = lazy(
@@ -31,11 +31,7 @@ const IncidentDetails = () => {
 
     error,
   } = useIncident(incidentId);
-console.log({
-    data: incident,
-    isLoading,
-    error,
-});
+
   const { data: timeline = [] } = useTimeline(incidentId);
 
   const canEdit = user?.role !== "viewer";

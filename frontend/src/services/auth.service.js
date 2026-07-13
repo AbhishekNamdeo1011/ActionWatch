@@ -2,6 +2,7 @@ import {
     loginUser,
     registerUser,
     logoutUser,
+    googleLogin,
 } from "@/api/auth.api";
 
 export const registerService = async (formData) => {
@@ -26,5 +27,15 @@ export const loginService = async (formData) => {
 export const logoutService = async () => {
 
     return await logoutUser();
+
+};
+
+export const googleLoginService = async (credential) => {
+
+    return await googleLogin(
+
+        credential
+
+    );
 
 };

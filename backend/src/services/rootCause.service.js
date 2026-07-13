@@ -161,9 +161,7 @@ Find Similar Incidents
 
     );
 
-console.log(
-    "\n========== Mongo Similar Incidents =========="
-);
+
 
 console.dir(
 
@@ -177,11 +175,9 @@ console.dir(
 
 );
 
-    console.log(
-        "\n========== Similar Incidents =========="
-    );
+   
 
-    console.log(similarIncidents);
+
 
     /*
     ==========================================
@@ -201,7 +197,7 @@ console.dir(
             similarIncidents
 
         );
-console.log("\n========== RAG ==========\n");
+
 
 console.dir(
 
@@ -220,9 +216,6 @@ console.dir(
     ==========================================
     */
 
-    console.log(
-        "\nCalling Gemini..."
-    );
 
     const response =
         await ai.models.generateContent({
@@ -277,24 +270,19 @@ console.dir(
         new Date();
 
     await incident.save();
-    console.log("Step 1");
+   
     /*
     ==========================================
     Store Embedding
     ==========================================
     */
 
-    console.log(
-        "Uploading incident to Pinecone..."
-    );
+   
 
     await storeVector(
         incident
     );
-    console.log("Step 2");
-    console.log(
-        "Incident uploaded successfully."
-    );
+   
 
     /*
     ==========================================

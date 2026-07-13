@@ -161,15 +161,35 @@ const googleLogin = asyncHandler(async (req, res) => {
     cookieOptions
 );
 
-    res.status(200).json({
-        message: "Google login successful",
+    return res.status(200).json({
+
+    success: true,
+
+    message: "Google login successful",
+
+    data: {
+
+        accessToken,
+
         user: {
+
+            id: user._id,
+
             username: user.username,
+
             email: user.email,
+
             role: user.role,
-            accessToken
-        }
-    });
+
+            expertise: user.expertise,
+
+            avatar: user.avatar,
+
+        },
+
+    },
+
+});
 
 });
 

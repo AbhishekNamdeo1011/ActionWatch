@@ -176,9 +176,8 @@ export const generatePostmortem = async (
 
         );
 
-    console.log(
-        "\nGenerating AI Postmortem..."
-    );
+   
+  
 
     /*
     ==========================================

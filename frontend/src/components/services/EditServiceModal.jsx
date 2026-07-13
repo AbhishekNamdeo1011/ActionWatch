@@ -1,6 +1,6 @@
 import Card from "@/components/common/Card";
 import ServiceForm from "./ServiceForm";
-import { useUpdateService } from "@/hooks/useUpdateService";
+import { useUpdateService } from "@/hooks/services/useUpdateService";
 
 const EditServiceModal = ({
     open,

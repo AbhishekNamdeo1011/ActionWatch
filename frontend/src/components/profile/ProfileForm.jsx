@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import Card from "@/components/common/Card";
 
-import { useUpdateProfile } from "@/hooks/useUpdateProfile";
+import { useUpdateProfile } from "@/hooks/profile/useUpdateProfile";
 
 const ROLE_STYLES = {
 

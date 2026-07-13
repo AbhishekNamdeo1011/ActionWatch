@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import Card from "@/components/common/Card";
-import { useUpdateUserRole } from "@/hooks/useUpdateUserRole";
+import { useUpdateUserRole } from "@/hooks/users/useUpdateUserRole";
 
 const ROLES = [
 

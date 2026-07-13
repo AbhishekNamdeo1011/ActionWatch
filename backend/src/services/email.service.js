@@ -32,10 +32,6 @@ export const sendAssignmentEmail = async (
 
     });
 
-    console.log(
-
-        "✅ Assignment email sent"
-
-    );
+    
 
 };

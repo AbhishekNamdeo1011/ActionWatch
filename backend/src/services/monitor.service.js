@@ -23,16 +23,11 @@ export const runHealthChecks = async () => {
 
     const services = await getActiveServices();
 
-    console.log(
-        `Found ${services.length} active service(s).\n`
-    );
+   
 
     for (const service of services) {
 
-        console.log("--------------------------------");
-        console.log("Checking:", service.name);
-        console.log("URL:", service.url);
-        console.log("--------------------------------");
+     
 
         await processServiceCheck(service).catch(async (err) => {
 
@@ -64,7 +59,7 @@ export const runHealthChecks = async () => {
 
         });
 
-        console.log("");
+       
 
     }
 
@@ -114,13 +109,11 @@ async function processServiceCheck(service) {
 
         });
 
-        console.log("Status:", response.status);
-        console.log("Response:", responseTime, "ms");
-        console.log("Health: UP");
+      
 
         if (updatedService.activeIncident) {
 
-            console.log("✅ Service Recovered");
+           
 
             await resolveAutomaticIncident(
                 updatedService.activeIncident
@@ -130,7 +123,7 @@ async function processServiceCheck(service) {
                 updatedService._id
             );
 
-            console.log("✅ Incident Resolved Automatically");
+            
 
         }
 
@@ -162,9 +155,7 @@ async function processServiceCheck(service) {
 
     });
 
-    console.log("Status:", response.status);
-    console.log("Expected:", service.expectedStatus);
-    console.log("Health: DOWN");
+ 
 
 }
 
@@ -231,11 +222,7 @@ async function handleFailure(
 
         );
 
-        console.log("🚨 Incident Already Active");
-
-        console.log(
-            `Failures: ${latestService.failureThreshold}/${latestService.failureThreshold}`
-        );
+      
 
         return;
 
@@ -258,9 +245,7 @@ async function handleFailure(
 
         );
 
-    console.log(
-        `Failures: ${updatedService.consecutiveFailures}/${updatedService.failureThreshold}`
-    );
+    
 
     /*
     ==========================================
@@ -288,9 +273,7 @@ async function handleFailure(
 
         );
 
-        console.log(
-            "🚨 Automatic Incident Created"
-        );
+       
 
     }
 

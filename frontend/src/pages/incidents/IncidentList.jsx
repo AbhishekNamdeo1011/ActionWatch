@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { useAuth } from "@/hooks/auth/useAuth";
 import { useIncidents } from "@/hooks/incidents/useIncidents";
-import useSocket from "@/hooks/useSocket";
+import useSocket from "@/hooks/sockets/useSocket";
 
 import PageHeader from "@/components/common/PageHeader";
 import IncidentFilters from "@/components/incidents/IncidentFilters";

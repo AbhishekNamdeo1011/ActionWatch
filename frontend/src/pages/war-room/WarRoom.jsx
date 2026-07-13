@@ -4,343 +4,258 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { useAuth } from "@/hooks/auth/useAuth";
-import useSocket from "@/hooks/useSocket";
+import useSocket from "@/hooks/sockets/useSocket";
 
 import { useIncident } from "@/hooks/incidents/useIncident";
-import { useTimeline } from "@/hooks/useTimeline";
+import { useTimeline } from "@/hooks/timeline/useTimeline";
 import { useSimilarIncidents } from "@/hooks/similarIncidents/useSimilarIncidents";
 import { usePostmortem } from "@/hooks/postmortem/usePostmortem";
 
 import { useGenerateRootCause } from "@/hooks/ai/useGenerateRootCause";
 import { useGeneratePostmortem } from "@/hooks/postmortem/useGeneratePostmortem";
 
-import AssignResponderModal from "@/components/responders/AssignResponderModal";
 import WarRoomSkeleton from "@/components/skeletons/WarRoomSkeleton";
 
-const WarRoomHeader = lazy(() =>
-    import("@/components/war-room/WarRoomHeader")
-);
+import WarRoomHeader from "@/components/war-room/WarRoomHeader";
+import CommandCenterCard from "@/components/war-room/CommandCenterCard";
+import TimelineCard from "@/components/war-room/TimelineCard";
+import ServiceHealthCard from "@/components/war-room/ServiceHealthCard";
+import AIAnalysisCard from "@/components/war-room/AIAnalysisCard";
+import PostmortemCard from "@/components/war-room/PostmortemCard";
+import RespondersCard from "@/components/war-room/RespondersCard";
+import SimilarIncidentsCard from "@/components/war-room/SimilarIncidentsCard";
+import LiveLogsCard from "@/components/war-room/LiveLogsCard";
+import ResolveIncidentCard from "@/components/war-room/ResolveIncidentCard";
 
-const CommandCenterCard = lazy(() =>
-    import("@/components/war-room/CommandCenterCard")
-);
-
-const TimelineCard = lazy(() =>
-    import("@/components/war-room/TimelineCard")
-);
-
-const ServiceHealthCard = lazy(() =>
-    import("@/components/war-room/ServiceHealthCard")
-);
-
-const AIAnalysisCard = lazy(() =>
-    import("@/components/war-room/AIAnalysisCard")
-);
-
-const PostmortemCard = lazy(() =>
-    import("@/components/war-room/PostmortemCard")
-);
-
-const RespondersCard = lazy(() =>
-    import("@/components/war-room/RespondersCard")
-);
-
-const SimilarIncidentsCard = lazy(() =>
-    import("@/components/war-room/SimilarIncidentsCard")
-);
-
-const LiveLogsCard = lazy(() =>
-    import("@/components/war-room/LiveLogsCard")
-);
-
-const ResolveIncidentCard = lazy(() =>
-    import("@/components/war-room/ResolveIncidentCard")
+const AssignResponderModal = lazy(
+  () => import("@/components/responders/AssignResponderModal"),
 );
 
 const WarRoom = () => {
+  const { incidentId } = useParams();
 
-    const { incidentId } = useParams();
+  const { user } = useAuth();
 
-    const { user } = useAuth();
+  const queryClient = useQueryClient();
 
-    const queryClient = useQueryClient();
+  const [assignOpen, setAssignOpen] = useState(false);
 
-    const [assignOpen, setAssignOpen] = useState(false);
-
-    /*
+  /*
     ==========================================
-    Socket Helpers
+    Refresh Helpers
     ==========================================
     */
 
-    const refreshIncident = () => {
-
-        queryClient.invalidateQueries({
-
-            queryKey: ["incident", incidentId],
-
-        });
-
-    };
-
-    useSocket("incident:updated", () => {
-
-        refreshIncident();
-
-        toast.info("Incident updated.");
-
+  const refreshIncident = () => {
+    queryClient.invalidateQueries({
+      queryKey: ["incident", incidentId],
     });
+  };
 
-    useSocket("incident:ai-generated", () => {
-
-        refreshIncident();
-
-        toast.success("AI analysis completed.");
-
+  const refreshTimeline = () => {
+    queryClient.invalidateQueries({
+      queryKey: ["timeline", incidentId],
     });
+  };
 
-    useSocket("timeline:created", () => {
-
-        queryClient.invalidateQueries({
-
-            queryKey: ["timeline", incidentId],
-
-        });
-
-        toast.success("New timeline activity.");
-
+  const refreshPostmortem = () => {
+    queryClient.invalidateQueries({
+      queryKey: ["postmortem", incidentId],
     });
+  };
 
-    useSocket("postmortem:generated", () => {
+  /*
+    ==========================================
+    Socket Events
+    ==========================================
+    */
 
-        queryClient.invalidateQueries({
+  useSocket("incident:updated", () => {
+    refreshIncident();
 
-            queryKey: ["postmortem", incidentId],
+    toast.info("Incident updated.");
+  });
 
-        });
+  useSocket("incident:ai-generated", () => {
+    refreshIncident();
 
-        toast.success("AI Postmortem generated.");
+    toast.success("AI Analysis Generated.");
+  });
 
-    });
+  useSocket("timeline:created", () => {
+    refreshTimeline();
 
-    /*
+    toast.success("Timeline Updated.");
+  });
+
+  useSocket("postmortem:generated", () => {
+    refreshPostmortem();
+
+    toast.success("Postmortem Generated.");
+  });
+
+  /*
     ==========================================
     Queries
     ==========================================
     */
 
-    const {
+  const {
+    data: incident,
 
-        data: incident,
+    isLoading,
 
-        isLoading,
+    isError,
+  } = useIncident(incidentId);
 
-    } = useIncident(incidentId);
+  const { data: timeline = [] } = useTimeline(incidentId);
 
-    const {
+  const { data: similarIncidents = [] } = useSimilarIncidents(incidentId);
 
-        data: timeline = [],
+  const { data: postmortem } = usePostmortem(incidentId);
 
-    } = useTimeline(incidentId);
-
-    const {
-
-        data: similarIncidents = [],
-
-    } = useSimilarIncidents(incidentId);
-
-    const {
-
-        data: postmortem,
-
-    } = usePostmortem(incidentId);
-
-    /*
+  /*
     ==========================================
-    AI Mutations
+    Mutations
     ==========================================
     */
 
-    const generateRootCause = useGenerateRootCause();
+  const generateRootCause = useGenerateRootCause();
 
-    const generatePostmortem = useGeneratePostmortem();
+  const generatePostmortem = useGeneratePostmortem();
 
-    /*
+  /*
     ==========================================
     Actions
     ==========================================
     */
 
-    const handleRefresh = async () => {
+  const handleRefresh = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: ["incident", incidentId],
+      }),
 
-        await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: ["timeline", incidentId],
+      }),
 
-            queryClient.invalidateQueries({
+      queryClient.invalidateQueries({
+        queryKey: ["postmortem", incidentId],
+      }),
+    ]);
 
-                queryKey: ["incident", incidentId],
+    toast.success("War Room Refreshed.");
+  };
 
-            }),
+  const handleGenerateAI = () => {
+    generateRootCause.mutate(incidentId);
+  };
 
-            queryClient.invalidateQueries({
+  const handleGeneratePostmortem = () => {
+    generatePostmortem.mutate(incidentId);
+  };
 
-                queryKey: ["timeline", incidentId],
-
-            }),
-
-        ]);
-
-        toast.success("War Room refreshed.");
-
-    };
-
-    const handleGenerateAI = () => {
-
-        generateRootCause.mutate(incidentId);
-
-    };
-
-    const handleGeneratePostmortem = () => {
-
-        generatePostmortem.mutate(incidentId);
-
-    };
-
-    /*
+  /*
     ==========================================
     Loading
     ==========================================
     */
 
-    if (isLoading) {
+  if (isLoading) {
+    return <WarRoomSkeleton />;
+  }
 
-        return <WarRoomSkeleton />;
+  /*
+    ==========================================
+    Error
+    ==========================================
+    */
 
-    }
+  if (isError || !incident) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <h2 className="text-xl font-semibold text-red-500">
+          Failed to load War Room.
+        </h2>
+      </div>
+    );
+  }
 
-    /*
+  /*
     ==========================================
     UI
     ==========================================
     */
 
-    return (
+  return (
+    <>
+      <div className="space-y-6">
+        {/* Header */}
 
-        <Suspense fallback={<WarRoomSkeleton />}>
+        <WarRoomHeader incident={incident} />
 
-            <div className="space-y-6">
+        {/* Command Center */}
 
-                {/* Header */}
-
-                <WarRoomHeader incident={incident} />
-
-                {/* Command Center */}
-
-         <div className="space-y-6">
-
-    {
-
-        user?.role !== "viewer" && (
-
+        <div className="space-y-6">
+          {user?.role !== "viewer" && (
             <CommandCenterCard
-
-                incident={incident}
-
-                onAssign={() => setAssignOpen(true)}
-
-                onGenerateAI={handleGenerateAI}
-
-                onGeneratePostmortem={handleGeneratePostmortem}
-
-                onRefresh={handleRefresh}
-
-                generatingAI={generateRootCause.isPending}
-
-                generatingPostmortem={generatePostmortem.isPending}
-
+              incident={incident}
+              onAssign={() => setAssignOpen(true)}
+              onGenerateAI={handleGenerateAI}
+              onGeneratePostmortem={handleGeneratePostmortem}
+              onRefresh={handleRefresh}
+              generatingAI={generateRootCause.isPending}
+              generatingPostmortem={generatePostmortem.isPending}
             />
+          )}
 
-        )
+          <TimelineCard timeline={timeline} incidentId={incidentId} />
+        </div>
 
-    }
+        {/* Health */}
 
-    <TimelineCard
+        <div className="space-y-6">
+          <ServiceHealthCard incident={incident} />
 
-        timeline={timeline}
+          <AIAnalysisCard incident={incident} />
 
-        incidentId={incidentId}
+          <PostmortemCard postmortem={postmortem} />
+        </div>
 
-    />
+        {/* Responders */}
 
-</div>
+        <RespondersCard
+          responders={incident.assignedTo || []}
+          incidentId={incident._id}
+        />
 
-                {/* Service + AI */}
+        {/* Similar Incidents */}
 
-    <div className="flex flex-col gap-6">
-    <ServiceHealthCard incident={incident} />
-    <AIAnalysisCard incident={incident} />
-    <PostmortemCard postmortem={postmortem} />
-</div>
+        <SimilarIncidentsCard incidents={similarIncidents} />
 
-                {/* Responders */}
+        {/* Logs */}
 
-                <RespondersCard
+        <LiveLogsCard logs={incident.errorLogs} />
 
-                    responders={incident?.assignedTo || []}
+        {/* Resolve */}
 
-                    incidentId={incident?._id}
+        {user?.role !== "viewer" && <ResolveIncidentCard incident={incident} />}
+      </div>
 
-                />
+      {/* Lazy Modal */}
 
-                {/* Similar Incidents */}
-
-                <SimilarIncidentsCard
-
-                    incidents={similarIncidents}
-
-                />
-
-                {/* Logs */}
-
-                <LiveLogsCard
-
-                    logs={incident?.errorLogs}
-
-                />
-
-                {/* Resolve */}
-
-                {
-
-                    user?.role !== "viewer" && (
-
-                        <ResolveIncidentCard
-
-                            incident={incident}
-
-                        />
-
-                    )
-
-                }
-
-                {/* Assign Modal */}
-
-                <AssignResponderModal
-
-                    open={assignOpen}
-
-                    onClose={() => setAssignOpen(false)}
-
-                    incident={incident}
-
-                />
-
-            </div>
-
+      {assignOpen && (
+        <Suspense fallback={null}>
+          <AssignResponderModal
+            open={assignOpen}
+            onClose={() => setAssignOpen(false)}
+            incident={incident}
+          />
         </Suspense>
-
-    );
-
+      )}
+    </>
+  );
 };
 
 export default WarRoom;

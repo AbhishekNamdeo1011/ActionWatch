@@ -17,11 +17,26 @@ export const getSimilarIncidents = async (
     ==========================================
     */
 
-    const incident = await IncidentModel.findById(
+   const incident = await IncidentModel.findById(incidentId)
 
-        incidentId
+.select(
+`
+title
+description
+severity
+status
+service
+affectedUsers
+errorLogs
+aiSummary
+aiRootCauses
+tags
+`
+)
 
-    );
+.populate("service", "name")
+
+.lean();
 
     if (!incident) {
 

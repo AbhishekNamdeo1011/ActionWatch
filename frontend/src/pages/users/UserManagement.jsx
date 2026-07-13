@@ -3,7 +3,7 @@ import { lazy, Suspense, useState } from "react";
 import PageHeader from "@/components/common/PageHeader";
 import UserSkeleton from "@/components/skeletons/UserSkeleton";
 
-import { useUsers } from "@/hooks/useUsers";
+import { useUsers } from "@/hooks/users/useUsers";
 
 const UserStats = lazy(() =>
     import("@/components/users/UserStats")

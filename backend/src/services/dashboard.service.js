@@ -3,69 +3,77 @@ import ServiceModel from "../models/service.model.js";
 
 export const getDashboardData = async () => {
 
-    /*
-    ==========================================
-    Incident Counts
-    ==========================================
-    */
+    const [
+        totalIncidents,
+        openIncidents,
+        resolvedIncidents,
+        criticalIncidents,
 
-    const totalIncidents =
-        await IncidentModel.countDocuments();
+        totalServices,
+        healthyServices,
+        unhealthyServices,
 
-    const openIncidents =
-        await IncidentModel.countDocuments({
+        mttrResult,
 
-            status: {
-                $ne: "resolved",
-            },
+        activeIncidents,
 
-        });
+        recentIncidents,
 
-    const resolvedIncidents =
-        await IncidentModel.countDocuments({
+    ] = await Promise.all([
+
+        /*
+        ==========================================
+        Incident Counts
+        ==========================================
+        */
+
+        IncidentModel.countDocuments(),
+
+        IncidentModel.countDocuments({
+
+            status: { $ne: "resolved" },
+
+        }),
+
+        IncidentModel.countDocuments({
 
             status: "resolved",
 
-        });
+        }),
 
-    const criticalIncidents =
-        await IncidentModel.countDocuments({
+        IncidentModel.countDocuments({
 
             severity: "P0",
 
-        });
+        }),
 
-    /*
-    ==========================================
-    Service Counts
-    ==========================================
-    */
+        /*
+        ==========================================
+        Service Counts
+        ==========================================
+        */
 
-    const totalServices =
-        await ServiceModel.countDocuments();
+        ServiceModel.countDocuments(),
 
-    const healthyServices =
-        await ServiceModel.countDocuments({
+        ServiceModel.countDocuments({
 
             currentStatus: "UP",
 
-        });
+        }),
 
-    const unhealthyServices =
-        await ServiceModel.countDocuments({
+        ServiceModel.countDocuments({
 
             currentStatus: "DOWN",
 
-        });
+        }),
 
-    /*
-    ==========================================
-    Average MTTR
-    ==========================================
-    */
+        /*
+        ==========================================
+        Average MTTR
+        ==========================================
+        */
 
-    const mttrResult =
-        await IncidentModel.aggregate([
+        IncidentModel.aggregate([
 
             {
 
@@ -97,52 +105,89 @@ export const getDashboardData = async () => {
 
             },
 
-        ]);
+        ]),
 
-    /*
-    ==========================================
-    Active Incidents
-    ==========================================
-    */
+        /*
+        ==========================================
+        Active Incidents
+        ==========================================
+        */
 
-    const activeIncidents = await IncidentModel.find({
+        IncidentModel.find({
 
-    status: { $ne: "resolved" }
+            status: {
 
-})
-.select(
-    "title severity status service affectedUsers createdAt"
-)
-.populate(
-    "createdBy",
-    "username"
-)
-.populate(
-    "service",
-    "name"
-)
-.sort({
-    createdAt: -1
-})
-.limit(5);
+                $ne: "resolved",
 
-    /*
-    ==========================================
-    Recent Incidents
-    ==========================================
-    */
+            },
 
-const recentIncidents = await IncidentModel.find()
+        })
 
-.select(
-    "title severity status service createdAt resolvedAt"
-)
+            .select(
 
-.sort({
-    createdAt: -1
-})
+                "title severity status service affectedUsers createdAt"
 
-.limit(10);
+            )
+
+            .populate(
+
+                "createdBy",
+
+                "username"
+
+            )
+
+            .populate(
+
+                "service",
+
+                "name"
+
+            )
+
+            .sort({
+
+                createdAt: -1,
+
+            })
+
+            .limit(5)
+
+            .lean(),
+
+        /*
+        ==========================================
+        Recent Incidents
+        ==========================================
+        */
+
+        IncidentModel.find()
+
+            .select(
+
+                "title severity status service createdAt resolvedAt"
+
+            )
+
+            .populate(
+
+                "service",
+
+                "name"
+
+            )
+
+            .sort({
+
+                createdAt: -1,
+
+            })
+
+            .limit(10)
+
+            .lean(),
+
+    ]);
 
     return {
 
@@ -160,12 +205,11 @@ const recentIncidents = await IncidentModel.find()
 
         unhealthyServices,
 
-        averageMTTR:
+        averageMTTR: Number(
 
-Number(
-    (mttrResult[0]?.averageMTTR || 0)
-    .toFixed(1)
-),
+            (mttrResult[0]?.averageMTTR || 0).toFixed(1)
+
+        ),
 
         activeIncidents,
 
@@ -174,7 +218,6 @@ Number(
     };
 
 };
-
 /*
 ==========================================
 Dashboard Analytics
@@ -183,171 +226,124 @@ Dashboard Analytics
 
 export const getDashboardAnalytics = async () => {
 
-    /*
-    ==========================================
-    Incidents By Severity
-    ==========================================
-    */
+    const [
 
-    const incidentsBySeverity =
-        await IncidentModel.aggregate([
+        incidentsBySeverity,
+
+        incidentsByStatus,
+
+        serviceHealth,
+
+        monthlyIncidents,
+
+    ] = await Promise.all([
+
+        /*
+        ==========================================
+        Incidents By Severity
+        ==========================================
+        */
+
+        IncidentModel.aggregate([
 
             {
                 $group: {
-
                     _id: "$severity",
-
-                    count: {
-
-                        $sum: 1,
-
-                    },
-
+                    count: { $sum: 1 },
                 },
-
             },
 
             {
-
                 $project: {
-
                     _id: 0,
-
                     severity: "$_id",
-
                     count: 1,
-
                 },
-
             },
 
             {
-
                 $sort: {
-
                     severity: 1,
-
                 },
-
             },
 
-        ]);
+        ]),
 
-    /*
-    ==========================================
-    Incidents By Status
-    ==========================================
-    */
+        /*
+        ==========================================
+        Incidents By Status
+        ==========================================
+        */
 
-    const incidentsByStatus =
-        await IncidentModel.aggregate([
+        IncidentModel.aggregate([
 
             {
-
                 $group: {
-
                     _id: "$status",
-
-                    count: {
-
-                        $sum: 1,
-
-                    },
-
+                    count: { $sum: 1 },
                 },
-
             },
 
             {
-
                 $project: {
-
                     _id: 0,
-
                     status: "$_id",
-
                     count: 1,
-
                 },
-
             },
 
-        ]);
+        ]),
 
-    /*
-    ==========================================
-    Service Health
-    ==========================================
-    */
+        /*
+        ==========================================
+        Service Health
+        ==========================================
+        */
 
-    const serviceHealth =
-        await ServiceModel.aggregate([
+        ServiceModel.aggregate([
 
             {
-
                 $group: {
-
                     _id: "$currentStatus",
-
-                    count: {
-
-                        $sum: 1,
-
-                    },
-
+                    count: { $sum: 1 },
                 },
-
             },
 
             {
-
                 $project: {
-
                     _id: 0,
-
                     status: "$_id",
-
                     count: 1,
-
                 },
-
             },
 
-        ]);
+        ]),
 
-    /*
-    ==========================================
-    Monthly Incidents
-    ==========================================
-    */
+        /*
+        ==========================================
+        Monthly Incidents
+        ==========================================
+        */
 
-    const monthlyIncidents =
-        await IncidentModel.aggregate([
+        IncidentModel.aggregate([
 
             {
-
                 $group: {
 
                     _id: {
 
                         year: {
-
                             $year: "$createdAt",
-
                         },
 
                         month: {
-
                             $month: "$createdAt",
-
                         },
 
                     },
 
                     count: {
-
                         $sum: 1,
-
                     },
 
                 },
@@ -355,7 +351,6 @@ export const getDashboardAnalytics = async () => {
             },
 
             {
-
                 $sort: {
 
                     "_id.year": 1,
@@ -377,9 +372,7 @@ export const getDashboardAnalytics = async () => {
                         $concat: [
 
                             {
-
                                 $toString: "$_id.year",
-
                             },
 
                             "-",
@@ -389,15 +382,10 @@ export const getDashboardAnalytics = async () => {
                                 $cond: [
 
                                     {
-
                                         $lt: [
-
                                             "$_id.month",
-
                                             10,
-
                                         ],
-
                                     },
 
                                     {
@@ -407,9 +395,7 @@ export const getDashboardAnalytics = async () => {
                                             "0",
 
                                             {
-
                                                 $toString: "$_id.month",
-
                                             },
 
                                         ],
@@ -417,9 +403,7 @@ export const getDashboardAnalytics = async () => {
                                     },
 
                                     {
-
                                         $toString: "$_id.month",
-
                                     },
 
                                 ],
@@ -436,7 +420,9 @@ export const getDashboardAnalytics = async () => {
 
             },
 
-        ]);
+        ]),
+
+    ]);
 
     return {
 

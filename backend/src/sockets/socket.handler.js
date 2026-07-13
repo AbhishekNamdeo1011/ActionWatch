@@ -34,7 +34,7 @@ export default function registerSocketHandlers(io) {
             getOnlineUsers()
         );
 
-        console.log(`${socket.user.username} Connected`);
+   
 
         // ===========================
         // Join War Room
@@ -103,7 +103,7 @@ export default function registerSocketHandlers(io) {
 
 }
 
-            console.log(`${socket.user.username} Disconnected`);
+       
 
         });
 

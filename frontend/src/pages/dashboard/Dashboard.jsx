@@ -19,16 +19,16 @@ import ServiceHealth from "@/components/dashboard/ServiceHealth";
 import ActiveIncidents from "@/components/dashboard/ActiveIncidents";
 
 import { useDashboard } from "@/hooks/dashboard/useDashboard";
-import useSocket from "@/hooks/useSocket";
+import useSocket from "@/hooks/sockets/useSocket";
 
 const CreateIncidentModal = lazy(() =>
     import("@/components/incidents/CreateIncidentModal")
 );
-
+import { useAuth } from "@/hooks/auth/useAuth";
 const Dashboard = () => {
 
     const [open, setOpen] = useState(false);
-
+ const { user } = useAuth();
     const queryClient = useQueryClient();
 
     useSocket("incident:created", () => {
@@ -85,21 +85,17 @@ const Dashboard = () => {
 
                 description="Monitor incidents, services and infrastructure."
 
-                action={
-
-                    <button
-                        onClick={() => setOpen(true)}
-                        className="flex h-11 items-center gap-2 rounded-xl bg-primary px-5 font-medium text-white transition hover:bg-primary-hover"
-                    >
-
-                        <Plus size={18} />
-
-                        New Incident
-
-                    </button>
-
-                }
-
+              action={
+    user?.role !== "viewer" && (
+        <button
+            onClick={() => setOpen(true)}
+            className="flex h-11 items-center gap-2 rounded-xl bg-primary px-5 font-medium text-white transition hover:bg-primary-hover"
+        >
+            <Plus size={18} />
+            New Incident
+        </button>
+    )
+}
             />
 
             {/* Stats */}

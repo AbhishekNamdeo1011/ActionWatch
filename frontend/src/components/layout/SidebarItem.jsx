@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-
+import {memo} from "react";
 const SidebarItem = ({ item }) => {
 
     const Icon = item.icon;
@@ -30,4 +30,4 @@ const SidebarItem = ({ item }) => {
 
 };
 
-export default SidebarItem;
+export default memo(SidebarItem);

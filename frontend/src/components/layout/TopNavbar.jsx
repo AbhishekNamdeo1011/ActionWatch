@@ -1,5 +1,5 @@
 import { Menu, Search, Bell } from "lucide-react";
-
+import { memo } from "react";
 import ProfileDropdown from "./ProfileDropdown";
 
 const TopNavbar = () => {
@@ -54,4 +54,4 @@ const TopNavbar = () => {
 
 };
 
-export default TopNavbar;
+export default memo(TopNavbar);

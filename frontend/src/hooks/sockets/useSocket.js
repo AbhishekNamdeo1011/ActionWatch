@@ -8,9 +8,7 @@ const useSocket = (event, callback) => {
         socket.on(event, callback);
 
         return () => {
-
             socket.off(event, callback);
-
         };
 
     }, [event, callback]);

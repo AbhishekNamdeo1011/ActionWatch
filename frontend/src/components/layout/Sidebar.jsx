@@ -1,20 +1,24 @@
 import { NavLink } from "react-router-dom";
-
+import {memo} from "react";
 import Logo from "@/assets/logos/actionwatch-logo.svg";
 
 import { sidebarItems } from "@/config/sidebar.config";
 
 import SidebarItem from "./SidebarItem";
-
+import { useMemo } from "react";
 import { useAuth } from "@/hooks/auth/useAuth";
 
 const Sidebar = () => {
 
     const { user } = useAuth();
 
-    const filteredItems = sidebarItems.filter((item) =>
+    const filteredItems = useMemo(() => {
+
+    return sidebarItems.filter((item) =>
         item.roles.includes(user?.role)
     );
+
+}, [user?.role]);
 
     return (
 
@@ -88,4 +92,4 @@ const Sidebar = () => {
 
 };
 
-export default Sidebar;
+export default memo(Sidebar);
