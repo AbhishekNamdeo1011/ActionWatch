@@ -1,14 +1,28 @@
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import {
 
-import { loginService } from "@/services/auth.service";
+    connectSocket,
+
+} from "@/lib/socket";
+import {
+    loginService,
+    googleLoginService,
+} from "@/services/auth.service";
+
 import { useAuth } from "@/hooks/auth/useAuth";
-import { googleLoginService } from "@/services/auth.service";
+
 export const useLogin = () => {
 
     const navigate = useNavigate();
 
     const { login } = useAuth();
+
+    /*
+    ==========================================
+    Email Login
+    ==========================================
+    */
 
     const handleLogin = async (formData) => {
 
@@ -18,15 +32,23 @@ export const useLogin = () => {
 
             login({
 
-                accessToken: response.accessToken,
+                accessToken: response.data.accessToken,
 
                 user: response.data.user,
 
             });
+connectSocket(
 
+    response.data.accessToken
+
+);
             toast.success(response.message);
 
-            navigate("/dashboard", { replace: true });
+            navigate("/dashboard", {
+
+                replace: true,
+
+            });
 
         }
 
@@ -43,67 +65,73 @@ export const useLogin = () => {
         }
 
     };
+
+    /*
+    ==========================================
+    Google Login
+    ==========================================
+    */
+
     const handleGoogleLogin = async (credential) => {
 
-    try {
+        try {
 
-        const response =
+            const response = await googleLoginService(
 
-        await googleLoginService(
+                credential
 
-            credential
+            );
 
-        );
+            login({
 
-        login({
+                accessToken: response.data.accessToken,
 
-            accessToken:
+                user: response.data.user,
 
-            response.data.accessToken,
+            });
+connectSocket(
 
-            user:
+    response.data.accessToken
 
-            response.data.user,
+);
+            toast.success(
 
-        });
+                response.message
 
-        toast.success(
+            );
 
-            response.message
+            navigate(
 
-        );
+                "/dashboard",
 
-        navigate(
+                {
 
-            "/dashboard",
+                    replace: true,
 
-            {
+                }
 
-                replace:true,
+            );
 
-            }
+        }
 
-        );
+        catch (error) {
 
-    }
+            toast.error(
 
-    catch(error){
+                error.response?.data?.message ||
 
-        toast.error(
+                "Google login failed"
 
-            error.response?.data?.message ||
+            );
 
-            "Google login failed"
+        }
 
-        );
-
-    }
-
-};
+    };
 
     return {
 
         handleLogin,
+
         handleGoogleLogin,
 
     };

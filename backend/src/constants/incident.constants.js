@@ -7,6 +7,6 @@ export const INCIDENT_STATUS = [
 export const INCIDENT_SEVERITY = [
     "P0",
     "P1",
-    "P2",
+    "P2", 
 ];
 

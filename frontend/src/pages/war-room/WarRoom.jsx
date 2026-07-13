@@ -2,7 +2,8 @@ import { lazy, Suspense, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-
+import { socket } from "@/lib/socket";
+import { useEffect } from "react";
 import { useAuth } from "@/hooks/auth/useAuth";
 import useSocket from "@/hooks/sockets/useSocket";
 
@@ -31,7 +32,13 @@ const AssignResponderModal = lazy(
   () => import("@/components/responders/AssignResponderModal"),
 );
 
+
+
+
+
 const WarRoom = () => {
+  
+
   const { incidentId } = useParams();
 
   const { user } = useAuth();
@@ -69,7 +76,29 @@ const WarRoom = () => {
     Socket Events
     ==========================================
     */
+useEffect(() => {
 
+    socket.emit(
+
+        "join-incident",
+
+        incidentId
+
+    );
+
+    return () => {
+
+        socket.emit(
+
+            "leave-incident",
+
+            incidentId
+
+        );
+
+    };
+
+}, [incidentId]);
   useSocket("incident:updated", () => {
     refreshIncident();
 

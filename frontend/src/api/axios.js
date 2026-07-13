@@ -1,5 +1,11 @@
 import axios from "axios";
+import {
 
+    updateSocketToken,
+
+    disconnectSocket,
+
+} from "@/lib/socket";
 import { getToken, setToken, clearToken } from "@/lib/tokenManager";
 
 const api = axios.create({
@@ -119,39 +125,107 @@ api.interceptors.response.use(
 
             const { data } = await axios.post(
 
-                `${import.meta.env.VITE_API_URL}/auth/refresh-token`,
+    `${import.meta.env.VITE_API_URL}/auth/refresh-token`,
 
-                {},
+    {},
 
-                {
+    {
 
-                    withCredentials: true,
+        withCredentials: true,
 
-                }
+    }
 
-            );
+);
 
-            setToken( data.data.accessToken);
+/*
+==========================================
+New Access Token
+==========================================
+*/
 
-            processQueue(null,  data.data.accessToken);
+const newToken = data.data.accessToken;
 
-            originalRequest.headers.Authorization = `Bearer ${ data.data.accessToken}`;
+/*
+==========================================
+Update Token Manager
+==========================================
+*/
 
-            return api(originalRequest);
+setToken(newToken);
+
+/*
+==========================================
+Update Socket Token
+==========================================
+*/
+
+updateSocketToken(
+
+    newToken
+
+);
+
+/*
+==========================================
+Retry Waiting Requests
+==========================================
+*/
+
+processQueue(null, newToken);
+
+originalRequest.headers.Authorization =
+
+`Bearer ${newToken}`;
+
+return api(originalRequest);
 
         }
 
-        catch (refreshError) {
+      catch (refreshError) {
 
-            processQueue(refreshError, null);
+    /*
+    ==========================================
+    Reject Pending Requests
+    ==========================================
+    */
 
-            clearToken();
+    processQueue(
 
-            window.location.href = "/login";
+        refreshError,
 
-            return Promise.reject(refreshError);
+        null
 
-        }
+    );
+
+    /*
+    ==========================================
+    Clear Token
+    ==========================================
+    */
+
+    clearToken();
+
+    /*
+    ==========================================
+    Disconnect Socket
+    ==========================================
+    */
+
+disconnectSocket();
+
+    /*
+    ==========================================
+    Reject Request
+    ==========================================
+    */
+
+    return Promise.reject(
+
+        refreshError
+
+    );
+
+}
 
         finally {
 

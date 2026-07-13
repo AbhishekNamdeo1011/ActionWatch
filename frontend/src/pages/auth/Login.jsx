@@ -259,39 +259,12 @@ const { handleLogin, handleGoogleLogin } = useLogin();
 
            <div className="flex justify-center">
 
-    <GoogleLogin
-
-        theme="outline"
-
-        size="large"
-
-        shape="pill"
-
-        text="continue_with"
-
-        width="360"
-
-        onSuccess={(credentialResponse) => {
-
-            handleGoogleLogin(
-
-                credentialResponse.credential
-
-            );
-
-        }}
-
-        onError={() => {
-
-            toast.error(
-
-                "Google Login Failed"
-
-            );
-
-        }}
-
-    />
+   <GoogleLogin
+  onSuccess={(credentialResponse) =>
+    handleGoogleLogin(credentialResponse.credential)
+  }
+  onError={() => toast.error("Google Login Failed")}
+/>
 
 </div>
 

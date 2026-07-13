@@ -22,11 +22,9 @@ Get Single Incident
 */
 export const getIncident = async (incidentId) => {
 
-    const response = await api.get(`/incidents/${incidentId}`);
+    const { data } = await api.get(`/incidents/${incidentId}`);
 
-  
-
-    return response.data.data;
+    return data.data;
 
 };
 

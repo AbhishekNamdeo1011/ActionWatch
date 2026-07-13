@@ -5,7 +5,11 @@ import { toast } from "sonner";
 import { memo } from "react";
 import { useAuth } from "@/hooks/auth/useAuth";
 import { logoutService } from "@/services/auth.service";
+import {
 
+    disconnectSocket,
+
+} from "@/lib/socket";
 const ProfileDropdown = () => {
 
     const { user, logout } = useAuth();
@@ -56,31 +60,54 @@ const ProfileDropdown = () => {
 
     }, []);
 
-    const handleLogout = async () => {
+const handleLogout = async () => {
 
-        try {
+    try {
 
-            await logoutService();
+        await logoutService();
 
-        }
+    }
 
-        catch (error) {
+    catch (error) {
 
-            console.error(error);
+        console.error(error);
 
-        }
+    }
 
-        logout();
+    /*
+    =====================================
+    Disconnect Socket
+    =====================================
+    */
 
-        toast.success("Logged out successfully.");
+disconnectSocket();
+    /*
+    =====================================
+    Clear Auth
+    =====================================
+    */
 
-        navigate("/login", {
+    logout();
+
+    toast.success(
+
+        "Logged out successfully."
+
+    );
+
+    navigate(
+
+        "/login",
+
+        {
 
             replace: true,
 
-        });
+        }
 
-    };
+    );
+
+};
 
     return (
 

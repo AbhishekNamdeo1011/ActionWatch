@@ -6,9 +6,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRegister } from "@/hooks/auth/useRegister";
 import Logo from "@/assets/logos/actionwatch-logo.svg";
 import RightBanner from "@/assets/logos/registerpage.svg";
-
+import { GoogleLogin } from "@react-oauth/google";
 import { registerSchema } from "@/schemas/auth.schema";
-
+import { toast } from "sonner";
 const Register = () => {
 
     const [showPassword, setShowPassword] = useState(false);
@@ -48,7 +48,13 @@ const Register = () => {
         },
 
     });
-const { register: registerAccount } = useRegister();
+const {
+
+    register: registerAccount,
+
+    handleGoogleRegister,
+
+} = useRegister();
   const onSubmit = async (data) => {
     await registerAccount(data);
 };
@@ -342,40 +348,43 @@ const { register: registerAccount } = useRegister();
 
                     {/* ================= Google Button ================= */}
 
-                    <button
-                        type="button"
-                        className="flex h-10 w-full items-center justify-center gap-3 rounded-xl border border-border bg-background text-sm font-medium text-foreground transition-all hover:border-primary hover:bg-surface-hover"
-                    >
+                  <div className="flex justify-center">
 
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 48 48"
-                            className="h-5 w-5"
-                        >
-                            <path
-                                fill="#FFC107"
-                                d="M43.611 20.083H42V20H24v8h11.303C33.654 32.657 29.215 36 24 36c-6.627 0-12-5.373-12-12S17.373 12 24 12c3.059 0 5.842 1.154 7.96 3.04l5.657-5.657C34.046 6.053 29.274 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"
-                            />
+    <GoogleLogin
 
-                            <path
-                                fill="#FF3D00"
-                                d="M6.306 14.691l6.571 4.819C14.655 16.108 18.961 13 24 13c3.059 0 5.842 1.154 7.96 3.04l5.657-5.657C34.046 6.053 29.274 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"
-                            />
+        theme="outline"
 
-                            <path
-                                fill="#4CAF50"
-                                d="M24 44c5.177 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.155 35.091 26.715 36 24 36c-5.194 0-9.623-3.328-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"
-                            />
+        size="large"
 
-                            <path
-                                fill="#1976D2"
-                                d="M43.611 20.083H42V20H24v8h11.303c-1.012 2.84-3.021 5.166-5.685 6.57l.003-.002l6.19 5.238C35.373 40.092 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"
-                            />
-                        </svg>
+        shape="pill"
 
-                        Continue with Google
+        text="signup_with"
 
-                    </button>
+        width="360"
+
+        onSuccess={(credentialResponse) => {
+
+            handleGoogleRegister(
+
+                credentialResponse.credential
+
+            );
+
+        }}
+
+        onError={() => {
+
+            toast.error(
+
+                "Google Sign Up Failed"
+
+            );
+
+        }}
+
+    />
+
+</div>
 
                     {/* ================= Footer ================= */}
 

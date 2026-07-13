@@ -1,6 +1,15 @@
-import { createContext, useContext, useMemo, useState,  useCallback } from "react";
+import {
+    createContext,
+    useContext,
+    useMemo,
+    useState,
+    useCallback,
+} from "react";
 
-import { setToken, clearToken } from "@/lib/tokenManager";
+import {
+    setToken,
+    clearToken,
+} from "@/lib/tokenManager";
 
 const AuthContext = createContext(null);
 
@@ -12,17 +21,15 @@ export const AuthProvider = ({ children }) => {
 
     const [loading, setLoading] = useState(true);
 
-   const login = useCallback(({ user, accessToken }) => {
+    const login = useCallback(({ user, accessToken }) => {
 
-    setUser(user);
+        setUser(user);
 
-    setAccessTokenState(accessToken);
+        setAccessTokenState(accessToken);
 
-    setToken(accessToken);
+        setToken(accessToken);
 
-    setLoading(false);
-
-}, []);
+    }, []);
 
     const logout = useCallback(() => {
 
@@ -31,8 +38,6 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
 
         setAccessTokenState(null);
-
-        setLoading(false);
 
     }, []);
 
@@ -44,30 +49,52 @@ export const AuthProvider = ({ children }) => {
 
     }, []);
 
-  const value = useMemo(() => ({
-    user,
-    accessToken,
-    loading,
-    setLoading,
-    login,
-    logout,
-    setUser,
-    setAccessToken,
-    isAuthenticated: !!user,
-}), [
-    user,
-    accessToken,
-    loading,
-    login,
-    logout,
-    setAccessToken,
-]);
+    const value = useMemo(() => ({
+
+        user,
+
+        accessToken,
+
+        loading,
+
+        setLoading,
+
+        login,
+
+        logout,
+
+        setUser,
+
+        setAccessToken,
+
+        isAuthenticated: !!user,
+
+    }), [
+
+        user,
+
+        accessToken,
+
+        loading,
+
+        login,
+
+        logout,
+
+        setAccessToken,
+
+    ]);
 
     return (
+
         <AuthContext.Provider value={value}>
+
             {children}
+
         </AuthContext.Provider>
+
     );
+
 };
 
 export const useAuthContext = () => {
@@ -75,7 +102,13 @@ export const useAuthContext = () => {
     const context = useContext(AuthContext);
 
     if (!context) {
-        throw new Error("useAuthContext must be used inside AuthProvider");
+
+        throw new Error(
+
+            "useAuthContext must be used inside AuthProvider"
+
+        );
+
     }
 
     return context;

@@ -63,12 +63,18 @@ const IncidentDetails = () => {
 
         {canEdit && (
           <div className="flex gap-3">
-            <button
-              onClick={() => navigate(`/war-room/${incident._id}`)}
-              className="rounded-xl bg-red-600 px-5 py-2 font-medium text-white transition hover:bg-red-700"
-            >
-              Open War Room
-            </button>
+           <button
+    onClick={() => {
+
+       
+
+        navigate(`/war-room/${incident._id}`);
+
+    }}
+    className="rounded-xl bg-red-600 px-5 py-2 font-medium text-white transition hover:bg-red-700"
+>
+    Open War Room
+</button>
 
             <button
               onClick={() => setOpen(true)}

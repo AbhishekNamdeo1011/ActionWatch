@@ -55,7 +55,7 @@ const RecentIncidents = () => {
                 {incidents.map((incident) => (
 
                     <div
-                        key={incident.id}
+                        key={incident._id}
 className="flex w-full items-center justify-between rounded-xl border border-border p-4 transition hover:bg-background"                    >
 
                         <div>

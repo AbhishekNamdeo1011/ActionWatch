@@ -41,4 +41,4 @@ const PageHeader = ({
 
 };
 
-export default PageHeader;
+export default memo(PageHeader);

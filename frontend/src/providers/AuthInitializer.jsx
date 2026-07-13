@@ -1,68 +1,75 @@
 import { useEffect } from "react";
 
 import { refreshAccessToken } from "@/api/auth.api";
-
 import { useAuth } from "@/hooks/auth/useAuth";
 
 const AuthInitializer = ({ children }) => {
 
     const {
-
         login,
-
         logout,
-
+        loading,
         setLoading,
-
     } = useAuth();
 
-   useEffect(() => {
+    useEffect(() => {
 
-    let mounted = true;
+        let mounted = true;
 
-    const initialize = async () => {
+        const initialize = async () => {
 
-        try {
+            try {
 
-            const response = await refreshAccessToken();
+                const response = await refreshAccessToken();
 
-            if (!mounted) return;
+                if (!mounted) return;
 
-            login({
+                login({
 
-                accessToken: response.data.accessToken,
+                    accessToken: response.data.accessToken,
 
-                user: response.data.user,
+                    user: response.data.user,
 
-            });
-
-        } catch {
-
-            if (!mounted) return;
-
-            logout();
-
-        } finally {
-
-            if (mounted) {
-
-                setLoading(false);
+                });
 
             }
 
-        }
+            catch {
 
-    };
+                if (!mounted) return;
 
-    initialize();
+                logout();
 
-    return () => {
+            }
 
-        mounted = false;
+            finally {
 
-    };
+                if (mounted) {
 
-}, [login, logout, setLoading]);
+                    setLoading(false);
+
+                }
+
+            }
+
+        };
+
+        initialize();
+
+        return () => {
+
+            mounted = false;
+
+        };
+
+    }, [login, logout, setLoading]);
+
+    if (loading) {
+
+        return null;
+        // Ya FullScreenLoader use kar sakte ho
+
+    }
 
     return children;
 
