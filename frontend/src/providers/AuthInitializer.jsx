@@ -64,12 +64,7 @@ const AuthInitializer = ({ children }) => {
 
     }, [login, logout, setLoading]);
 
-    if (loading) {
-
-        return null;
-        // Ya FullScreenLoader use kar sakte ho
-
-    }
+   
 
     return children;
 
